@@ -293,12 +293,15 @@
       border: 1px solid var(--border-color);
       border-radius: 10px;
       padding: 10px 14px;
-      cursor: pointer;
     }
-    .budget-value {
+    .budget-config-row input {
+      background: transparent;
+      border: none;
       color: var(--accent-green);
       font-size: 16px;
       font-weight: 700;
+      width: 120px;
+      outline: none;
     }
 
     .loading {
@@ -345,12 +348,12 @@
     <div id="semanalView" class="view-section">
       <div class="section-block">
         <div class="section-title" id="mesTituloSemanal">CONTROL SEMANAL</div>
-        <div class="budget-config-row" onclick="cambiarPresupuestoManual()">
+        <div class="budget-config-row">
           <div>
-            <div style="font-size:9px; color:var(--text-sub); font-weight:700;">PRESUPUESTO MES (Toca para editar)</div>
-            <div class="budget-value" id="budgetText">$0</div>
+            <div style="font-size:9px; color:var(--text-sub); font-weight:700;">PRESUPUESTO MES</div>
+            <input type="text" id="budgetInput" value="442.769" onchange="actualizarPresupuesto(this.value)">
           </div>
-          <div style="font-size:10px; color:var(--text-sub);">✏️ Cambiar</div>
+          <div style="font-size:10px; color:var(--text-sub);">Ajuste automático</div>
         </div>
         <div id="semanasContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
       </div>
@@ -392,9 +395,7 @@
 
     let dataDetalle = [];
     let dataNubank = [];
-    
-    // Cargar presupuesto guardado o usar 542769 por defecto
-    let presupuestoMensual = parseInt(localStorage.getItem("presupuestoMensual")) || 542769;
+    let presupuestoMensual = 442769;
 
     const SUBLIMITES_CONFIG = {
       "Mercado": 1200000,
@@ -422,18 +423,6 @@
       } else if (tab === 'nubank') {
         document.querySelectorAll('.tab-btn')[3].classList.add('active');
         document.getElementById('nubankView').classList.add('active');
-      }
-    }
-
-    function cambiarPresupuestoManual() {
-      let nuevo = prompt("Ingresa el nuevo presupuesto mensual:", presupuestoMensual);
-      if (nuevo !== null) {
-        let limpio = parseInt(nuevo.replace(/\D/g, ""), 10);
-        if (!isNaN(limpio) && limpio > 0) {
-          presupuestoMensual = limpio;
-          localStorage.setItem("presupuestoMensual", presupuestoMensual);
-          renderSemanal();
-        }
       }
     }
 
@@ -493,6 +482,13 @@
         }
       }
       return null;
+    }
+
+    function actualizarPresupuesto(val) {
+      let limpio = val.replace(/\D/g, "");
+      presupuestoMensual = parseInt(limpio, 10) || 442769;
+      document.getElementById('budgetInput').value = format(presupuestoMensual);
+      renderSemanal();
     }
 
     async function cargarDatos() {
@@ -590,8 +586,6 @@
     }
 
     function renderSemanal() {
-      document.getElementById('budgetText').innerText = `$${format(presupuestoMensual)}`;
-
       let ahora = new Date();
       let añoActual = ahora.getFullYear();
       let mesActual = ahora.getMonth();
