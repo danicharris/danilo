@@ -328,7 +328,7 @@
       <button class="tab-btn" onclick="switchTab('nubank')">Nubank</button>
     </div>
 
-    <div id="loadingView" class="loading">Cargando datos desde Google Sheets...</div>
+    <div id="loadingView" class="loading">Cargando datos directos de Google Sheets...</div>
 
     <!-- PESTAÑA 1: BALANCE -->
     <div id="balanceView" class="view-section active">
@@ -426,6 +426,36 @@
       }
     }
 
+    function parseCSV(text) {
+      let lines = text.split("\n");
+      let result = [];
+      let headers = parseCSVLine(lines[0]);
+
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        let currentline = parseCSVLine(lines[i]);
+        let obj = {};
+        for (let j = 0; j < headers.length; j++) {
+          let headerKey = headers[j].trim();
+          obj[headerKey] = currentline[j] ? currentline[j].trim() : "";
+        }
+        result.push(obj);
+      }
+      return result;
+    }
+
+    function parseCSVLine(text) {
+      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
+      let a = [];
+      text.replace(re_value, function(m0, m1, m2, m3) {
+        if (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"));
+        else if (m2 !== undefined) a.push(m2.replace(/\\"/g, '"'));
+        else if (m3 !== undefined) a.push(m3);
+        return "";
+      });
+      return a;
+    }
+
     function limpiarMonto(valor) {
       if (valor === null || valor === undefined) return 0;
       let str = String(valor);
@@ -436,24 +466,10 @@
       return esNegativo ? -numero : numero;
     }
 
-    function format(n) {
-      return n.toLocaleString("es-CO");
-    }
-
-    function formatK(n) {
-      if (n === 0) return "";
-      let miles = Math.round(n / 1000);
-      return `${miles}k`;
-    }
-
-    function redondearAlMil(n) {
-      return Math.round(n / 1000) * 1000;
-    }
-
-    function normalizarTexto(str) {
-      if (!str) return "";
-      return String(str).trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    }
+    function format(n) { return n.toLocaleString("es-CO"); }
+    function formatK(n) { if (n === 0) return ""; return `${Math.round(n / 1000)}k`; }
+    function redondearAlMil(n) { return Math.round(n / 1000) * 1000; }
+    function normalizarTexto(str) { if (!str) return ""; return String(str).trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
 
     function parseFecha(fechaStr) {
       if (!fechaStr) return null;
@@ -479,38 +495,35 @@
       document.getElementById('loadingView').style.display = 'block';
       try {
         let timeStamp = new Date().getTime();
+        let urlDetalle = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetNameDetalle)}&t=${timeStamp}`;
+        let urlNubank = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetNameNubank)}&t=${timeStamp}`;
+
         let [resDetalle, resNubank] = await Promise.all([
-          fetch(`https://opensheet.elk.sh/${sheetID}/${sheetNameDetalle}?t=${timeStamp}`),
-          fetch(`https://opensheet.elk.sh/${sheetID}/${sheetNameNubank}?t=${timeStamp}`)
+          fetch(urlDetalle),
+          fetch(urlNubank)
         ]);
 
-        if (!resDetalle.ok || !resNubank.ok) {
-          throw new Error("No se pudo conectar con Google Sheets.");
-        }
+        if (!resDetalle.ok || !resNubank.ok) throw new Error("Error al descargar las hojas.");
 
-        dataDetalle = await resDetalle.json();
-        dataNubank = await resNubank.json();
+        let textDetalle = await resDetalle.text();
+        let textNubank = await resNubank.text();
+
+        dataDetalle = parseCSV(textDetalle);
+        dataNubank = parseCSV(textNubank);
 
         document.getElementById('loadingView').style.display = 'none';
-
         renderTodo();
       } catch (e) {
         console.error(e);
-        document.getElementById('loadingView').innerHTML = `⚠️ Error cargando datos.<br><span style="font-size:10px; color:#FF3366;">${e.message}</span>`;
+        document.getElementById('loadingView').innerHTML = `⚠️ Error cargando Google Sheets.<br><span style="font-size:10px; color:#FF3366;">${e.message}</span>`;
       }
     }
 
     function renderTodo() {
-      try {
-        renderBalance();
-        renderSemanal();
-        renderCalendario();
-        renderNubank();
-      } catch (err) {
-        console.error("Error al renderizar:", err);
-        document.getElementById('loadingView').style.display = 'block';
-        document.getElementById('loadingView').innerHTML = `⚠️ Error procesando la información.<br><span style="font-size:10px; color:#FF3366;">${err.message}</span>`;
-      }
+      renderBalance();
+      renderSemanal();
+      renderCalendario();
+      renderNubank();
     }
 
     function renderBalance() {
