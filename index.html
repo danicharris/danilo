@@ -274,7 +274,6 @@
       transition: width 0.5s ease;
     }
 
-    /* Gráfico de Línea Diario (Simulado con puntos y SVG responsive) */
     .line-chart-box {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -396,7 +395,6 @@
           </div>
           <div style="position:relative; height:110px; width:100%; margin-top:6px;">
             <svg id="lineChartSvg" width="100%" height="100%" viewBox="0 0 300 100" preserveAspectRatio="none" style="overflow:visible;">
-              <!-- Línea y puntos generados por JS -->
             </svg>
           </div>
           <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-sub); margin-top:4px;">
@@ -855,9 +853,7 @@
       });
     }
 
-    // GENERADOR DE GRÁFICOS PARA LA PESTAÑA INICIO
     function renderDashboardGraficos() {
-      // 1. Gráfico de Balance por Cuentas
       let cuentasRaw = { "Bancolombia": 0, "Nequi": 0, "Efectivo": 0 };
       if (Array.isArray(dataDetalle)) {
         dataDetalle.forEach(row => {
@@ -875,7 +871,7 @@
       chartBalEl.innerHTML = "";
 
       let coloresCuentas = { "Bancolombia": "#FDDA24", "Nequi": "#E00075", "Efectivo": "#00C853" };
-      Object.keys(cuentasRaw].forEach(cta => {
+      Object.keys(cuentasRaw).forEach(cta => {
         let val = cuentasRaw[cta];
         let pct = Math.min(Math.max((val / maxCuentaVal) * 100, 2), 100);
         chartBalEl.innerHTML += `
@@ -886,7 +882,6 @@
         `;
       });
 
-      // 2. Gráfico de Gasto Semanal
       let ahora = new Date();
       let añoActual = ahora.getFullYear();
       let mesActual = ahora.getMonth();
@@ -941,7 +936,6 @@
         `;
       });
 
-      // 3. Gráfico de Línea Diario
       let gastosDiarios = {};
       for(let d=1; d<=ultimoDiaMes; d++) gastosDiarios[d] = 0;
       let totalGastoMes = 0;
@@ -961,7 +955,6 @@
 
       document.getElementById('totalMesGrafico').innerText = `$${format(totalGastoMes)} gastados`;
 
-      // Construir Puntos y Línea SVG
       let svgEl = document.getElementById('lineChartSvg');
       let maxGastoDia = Math.max(...Object.values(gastosDiarios), 10000);
       let points = [];
@@ -970,7 +963,7 @@
       for(let d=1; d<=ultimoDiaMes; d++) {
         let val = gastosDiarios[d];
         let x = (d - 1) * stepX;
-        let y = 90 - (val / maxGastoDia) * 80; // Margen de 10px arriba
+        let y = 90 - (val / maxGastoDia) * 80;
         points.push(`${x},${y}`);
       }
 
