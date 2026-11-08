@@ -346,7 +346,7 @@
         <div class="section-title" id="mesTituloSemanal">CONTROL SEMANAL</div>
         <div class="budget-config-row">
           <div>
-            <div style="font-size:9px; color:var(--text-sub); font-weight:700;">PRESUPUESTO MES (DEFINIDO EN CÓDIGO)</div>
+            <div style="font-size:9px; color:var(--text-sub); font-weight:700;">PRESUPUESTO MES</div>
           </div>
           <div class="budget-value" id="budgetText">$0</div>
         </div>
@@ -391,7 +391,7 @@
     let dataDetalle = [];
     let dataNubank = [];
     
-    // AQUÍ CAMBIAS EL VALOR DEL PRESUPUESTO MENSUAL DIRECTAMENTE EN EL CÓDIGO
+    // PRESUPUESTO MENSUAL CONTROLADO DESDE EL CÓDIGO
     const PRESUPUESTO_MENSUAL = 542769;
 
     const SUBLIMITES_CONFIG = {
@@ -576,7 +576,6 @@
     }
 
     function renderSemanal() {
-      // Actualiza el título/caja del presupuesto en pantalla con la constante del código
       document.getElementById('budgetText').innerText = `$${format(PRESUPUESTO_MENSUAL)}`;
 
       let ahora = new Date();
