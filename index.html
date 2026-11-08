@@ -292,16 +292,12 @@
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 10px;
-      padding: 10px 14px;
+      padding: 12px 14px;
     }
-    .budget-config-row input {
-      background: transparent;
-      border: none;
+    .budget-value {
       color: var(--accent-green);
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
-      width: 120px;
-      outline: none;
     }
 
     .loading {
@@ -350,10 +346,9 @@
         <div class="section-title" id="mesTituloSemanal">CONTROL SEMANAL</div>
         <div class="budget-config-row">
           <div>
-            <div style="font-size:9px; color:var(--text-sub); font-weight:700;">PRESUPUESTO MES</div>
-            <input type="text" id="budgetInput" value="442.769" onchange="actualizarPresupuesto(this.value)">
+            <div style="font-size:9px; color:var(--text-sub); font-weight:700;">PRESUPUESTO MES (DEFINIDO EN CÓDIGO)</div>
           </div>
-          <div style="font-size:10px; color:var(--text-sub);">Ajuste automático</div>
+          <div class="budget-value" id="budgetText">$0</div>
         </div>
         <div id="semanasContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
       </div>
@@ -395,7 +390,9 @@
 
     let dataDetalle = [];
     let dataNubank = [];
-    let presupuestoMensual = 442769;
+    
+    // AQUÍ CAMBIAS EL VALOR DEL PRESUPUESTO MENSUAL DIRECTAMENTE EN EL CÓDIGO
+    const PRESUPUESTO_MENSUAL = 542769;
 
     const SUBLIMITES_CONFIG = {
       "Mercado": 1200000,
@@ -482,13 +479,6 @@
         }
       }
       return null;
-    }
-
-    function actualizarPresupuesto(val) {
-      let limpio = val.replace(/\D/g, "");
-      presupuestoMensual = parseInt(limpio, 10) || 442769;
-      document.getElementById('budgetInput').value = format(presupuestoMensual);
-      renderSemanal();
     }
 
     async function cargarDatos() {
@@ -586,6 +576,9 @@
     }
 
     function renderSemanal() {
+      // Actualiza el título/caja del presupuesto en pantalla con la constante del código
+      document.getElementById('budgetText').innerText = `$${format(PRESUPUESTO_MENSUAL)}`;
+
       let ahora = new Date();
       let añoActual = ahora.getFullYear();
       let mesActual = ahora.getMonth();
@@ -612,11 +605,11 @@
         diaInicio = diaFin + 1;
       }
 
-      let valorDiario = totalDiasMes > 0 ? (presupuestoMensual / totalDiasMes) : 0;
+      let valorDiario = totalDiasMes > 0 ? (PRESUPUESTO_MENSUAL / totalDiasMes) : 0;
       let sumaTopes = 0;
       semanas.forEach((sem, idx) => {
         if (idx === semanas.length - 1) {
-          sem.topeBase = presupuestoMensual - sumaTopes;
+          sem.topeBase = PRESUPUESTO_MENSUAL - sumaTopes;
         } else {
           sem.topeBase = redondearAlMil(valorDiario * sem.diasCount);
           sumaTopes += sem.topeBase;
