@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Control Financiero Total</title>
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Finanzas">
+  
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0B1325 0%, #050811 100%);
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --border-color: rgba(255, 255, 255, 0.15);
+      --text-main: #FFFFFF;
+      --text-sub: #8E9DAE;
+      --accent-green: #00FF88;
+      --accent-red: #FF3366;
+      --accent-yellow: #FFCC00;
+      --accent-blue: #3A86FF;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-bottom: 80px;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 14px 18px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: var(--text-main);
+    }
+
+    .refresh-btn {
+      background: rgba(0, 255, 136, 0.12);
+      border: 1px solid rgba(0, 255, 136, 0.4);
+      color: var(--accent-green);
+      padding: 7px 14px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Pestañas */
+    .nav-tabs {
+      display: flex;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-sub);
+      padding: 9px 4px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: var(--text-main);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .view-section {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .view-section.active {
+      display: flex;
+    }
+
+    .section-block {
+      background: rgba(255, 255, 255, 0.03);
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      color: var(--accent-blue);
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      margin-bottom: 2px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .total-card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+    .total-title {
+      font-size: 11px;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .total-amount {
+      font-size: 28px;
+      font-weight: 800;
+      margin: 4px 0;
+    }
+    .total-sub {
+      font-size: 10px;
+      color: var(--text-sub);
+      font-weight: 600;
+    }
+
+    .row-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .row-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .row-info h4 {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .row-info span {
+      font-size: 10px;
+      color: var(--text-sub);
+    }
+    .row-right {
+      text-align: right;
+    }
+    .row-right .val {
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .row-right .sub {
+      font-size: 10px;
+      color: var(--text-sub);
+    }
+
+    .progress-bg {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    .last-mov {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+    .cal-day-header {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-sub);
+      padding: 4px 0;
+    }
+    .cal-cell {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 6px;
+    }
+    .cal-cell.empty {
+      background: transparent;
+      border: none;
+    }
+    .cal-cell.has-expense {
+      background: rgba(255, 51, 102, 0.22);
+      border-color: rgba(255, 51, 102, 0.4);
+    }
+    .cal-cell.today {
+      border-color: var(--accent-green);
+    }
+    .cal-day-num {
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .cal-day-amount {
+      font-size: 9px;
+      font-weight: 700;
+      color: #FF88AA;
+      text-align: right;
+    }
+
+    .budget-config-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+    .budget-config-row input {
+      background: transparent;
+      border: none;
+      color: var(--accent-green);
+      font-size: 16px;
+      font-weight: 700;
+      width: 120px;
+      outline: none;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-sub);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-bar">
+      <div class="header-title">⚡ MIS FINANZAS</div>
+      <button class="refresh-btn" onclick="cargarDatos()">Actualizar 🔄</button>
+    </div>
+
+    <!-- Barra de Pestañas -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('balance')">Balance</button>
+      <button class="tab-btn" onclick="switchTab('semanal')">Semanal</button>
+      <button class="tab-btn" onclick="switchTab('calendario')">Calendario</button>
+      <button class="tab-btn" onclick="switchTab('nubank')">Nubank</button>
+    </div>
+
+    <div id="loadingView" class="loading">Cargando datos desde Google Sheets...</div>
+
+    <!-- PESTAÑA 1: BALANCE -->
+    <div id="balanceView" class="view-section active">
+      <div class="section-block">
+        <div class="section-title">BALANCE GENERAL</div>
+        <div class="total-card">
+          <div class="total-title">Balance Total</div>
+          <div class="total-amount" id="balTotalNum">$0</div>
+          <div class="total-sub" id="balTotalCuentas">0 CUENTAS ACTIVAS</div>
+        </div>
+        <div id="cuentasContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+        <div class="last-mov" id="lastMovBalance"></div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 2: CONTROL SEMANAL -->
+    <div id="semanalView" class="view-section">
+      <div class="section-block">
+        <div class="section-title" id="mesTituloSemanal">CONTROL SEMANAL</div>
+        <div class="budget-config-row">
+          <div>
+            <div style="font-size:9px; color:var(--text-sub); font-weight:700;">PRESUPUESTO MES</div>
+            <input type="text" id="budgetInput" value="442.769" onchange="actualizarPresupuesto(this.value)">
+          </div>
+          <div style="font-size:10px; color:var(--text-sub);">Ajuste automático</div>
+        </div>
+        <div id="semanasContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 3: CALENDARIO -->
+    <div id="calendarioView" class="view-section">
+      <div class="section-block">
+        <div class="section-title" id="mesTituloCalendario">CALENDARIO MENSUAL</div>
+        <div class="card" style="background:transparent; border:none; padding:0;">
+          <div class="calendar-grid" id="calendarGrid">
+            <div class="cal-day-header">L</div><div class="cal-day-header">M</div><div class="cal-day-header">M</div>
+            <div class="cal-day-header">J</div><div class="cal-day-header">V</div><div class="cal-day-header">S</div><div class="cal-day-header">D</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 4: NUBANK -->
+    <div id="nubankView" class="view-section">
+      <div class="section-block">
+        <div class="section-title">TARJETA NUBANK</div>
+        <div class="total-card">
+          <div class="total-title">Disponible Nubank</div>
+          <div class="total-amount" id="nubankDisponible">$0</div>
+          <div class="total-sub" id="nubankUsado">USADO: $0</div>
+        </div>
+        <div id="sublimitesContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+        <div class="last-mov" id="lastMovNubank"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const sheetID = "1wVYYrD0tjt-InNRNP5zw-pvNLb5oLZqiwnVnhx2fSJ4";
+    const sheetNameDetalle = "Detalle";
+    const sheetNameNubank = "Nubank";
+
+    let dataDetalle = [];
+    let dataNubank = [];
+    let presupuestoMensual = 442769;
+
+    const SUBLIMITES_CONFIG = {
+      "Mercado": 1200000,
+      "Gym": 159800,
+      "Moto": 120000,
+      "Claro": 86000,
+      "Levotiroxina": 43000,
+      "Adicional": 1191200
+    };
+    const LIMITE_TOTAL_NUBANK = 2800000;
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+      
+      if (tab === 'balance') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('balanceView').classList.add('active');
+      } else if (tab === 'semanal') {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('semanalView').classList.add('active');
+      } else if (tab === 'calendario') {
+        document.querySelectorAll('.tab-btn')[2].classList.add('active');
+        document.getElementById('calendarioView').classList.add('active');
+      } else if (tab === 'nubank') {
+        document.querySelectorAll('.tab-btn')[3].classList.add('active');
+        document.getElementById('nubankView').classList.add('active');
+      }
+    }
+
+    function limpiarMonto(valor) {
+      if (valor === null || valor === undefined) return 0;
+      let str = String(valor);
+      let esNegativo = str.includes("-");
+      let soloNumeros = str.replace(/\D/g, "");
+      if (!soloNumeros) return 0;
+      let numero = parseInt(soloNumeros, 10);
+      return esNegativo ? -numero : numero;
+    }
+
+    function format(n) {
+      return n.toLocaleString("es-CO");
+    }
+
+    function formatK(n) {
+      if (n === 0) return "";
+      let miles = Math.round(n / 1000);
+      return `${miles}k`;
+    }
+
+    function redondearAlMil(n) {
+      return Math.round(n / 1000) * 1000;
+    }
+
+    function normalizarTexto(str) {
+      if (!str) return "";
+      return String(str).trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function parseFecha(fechaStr) {
+      if (!fechaStr) return null;
+      let partes = String(fechaStr).trim().split(/[\/\-]/);
+      if (partes.length === 3) {
+        if (partes[0].length === 4) {
+          return new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
+        } else {
+          return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+        }
+      }
+      return null;
+    }
+
+    function actualizarPresupuesto(val) {
+      let limpio = val.replace(/\D/g, "");
+      presupuestoMensual = parseInt(limpio, 10) || 442769;
+      document.getElementById('budgetInput').value = format(presupuestoMensual);
+      renderSemanal();
+    }
+
+    async function cargarDatos() {
+      document.getElementById('loadingView').style.display = 'block';
+      try {
+        let timeStamp = new Date().getTime();
+        let [resDetalle, resNubank] = await Promise.all([
+          fetch(`https://opensheet.elk.sh/${sheetID}/${sheetNameDetalle}?t=${timeStamp}`),
+          fetch(`https://opensheet.elk.sh/${sheetID}/${sheetNameNubank}?t=${timeStamp}`)
+        ]);
+
+        if (!resDetalle.ok || !resNubank.ok) {
+          throw new Error("No se pudo conectar con Google Sheets.");
+        }
+
+        dataDetalle = await resDetalle.json();
+        dataNubank = await resNubank.json();
+
+        document.getElementById('loadingView').style.display = 'none';
+
+        renderTodo();
+      } catch (e) {
+        console.error(e);
+        document.getElementById('loadingView').innerHTML = `⚠️ Error cargando datos.<br><span style="font-size:10px; color:#FF3366;">${e.message}</span>`;
+      }
+    }
+
+    function renderTodo() {
+      try {
+        renderBalance();
+        renderSemanal();
+        renderCalendario();
+        renderNubank();
+      } catch (err) {
+        console.error("Error al renderizar:", err);
+        document.getElementById('loadingView').style.display = 'block';
+        document.getElementById('loadingView').innerHTML = `⚠️ Error procesando la información.<br><span style="font-size:10px; color:#FF3366;">${err.message}</span>`;
+      }
+    }
+
+    function renderBalance() {
+      let cuentasRaw = { "Bancolombia": 0, "Nequi": 0, "Efectivo": 0 };
+      if (Array.isArray(dataDetalle)) {
+        dataDetalle.forEach(row => {
+          let tipo = (row.Tipo || row.tipo || row.TIPO || "").toLowerCase().trim();
+          let monto = limpiarMonto(row.Monto || row.monto || row.MONTO || "0");
+          let cuenta = row.Cuenta || row.cuenta || row.CUENTA || "Efectivo";
+          if (!cuentasRaw.hasOwnProperty(cuenta)) cuentasRaw[cuenta] = 0;
+          if (tipo === "ingreso") cuentasRaw[cuenta] += monto;
+          if (tipo === "gasto" || tipo === "ahorro") cuentasRaw[cuenta] -= monto;
+        });
+      }
+
+      let balanceNum = Object.values(cuentasRaw).reduce((a, b) => a + b, 0);
+      document.getElementById('balTotalNum').innerText = `$${format(balanceNum)}`;
+      document.getElementById('balTotalNum').style.color = balanceNum >= 0 ? "#00FF88" : "#FF3366";
+      document.getElementById('balTotalCuentas').innerText = `${Object.keys(cuentasRaw).length} CUENTAS ACTIVAS`;
+
+      let cuentasConfig = [
+        { nombre: "Bancolombia", tipo: "Cuenta de ahorros", val: cuentasRaw["Bancolombia"] || 0, inicial: "BC", bg: "#FDDA24", color: "#000" },
+        { nombre: "Nequi", tipo: "Cartera digital", val: cuentasRaw["Nequi"] || 0, inicial: "NQ", bg: "#E00075", color: "#FFF" },
+        { nombre: "Efectivo", tipo: "Físico", val: cuentasRaw["Efectivo"] || 0, inicial: "EF", bg: "#00C853", color: "#FFF" }
+      ];
+
+      let cContainer = document.getElementById('cuentasContainer');
+      cContainer.innerHTML = "";
+      cuentasConfig.forEach(c => {
+        let pct = balanceNum > 0 ? ((c.val / balanceNum) * 100).toFixed(0) + "%" : "0%";
+        cContainer.innerHTML += `
+          <div class="row-item">
+            <div class="row-left">
+              <div class="badge" style="background:${c.bg}; color:${c.color};">${c.inicial}</div>
+              <div class="row-info">
+                <h4>${c.nombre.toUpperCase()}</h4>
+                <span>${c.tipo.toUpperCase()}</span>
+              </div>
+            </div>
+            <div class="row-right">
+              <div class="val">$${format(c.val)}</div>
+              <div class="sub">${pct}</div>
+            </div>
+          </div>
+        `;
+      });
+
+      let ultimoRow = dataDetalle.length > 0 ? dataDetalle[dataDetalle.length - 1] : {};
+      let txtFecha = ultimoRow.Fecha || ultimoRow.date || ultimoRow.dia || "";
+      let txtConc = ultimoRow.Concepto || ultimoRow.descripcion || "";
+      let tipoUlt = (ultimoRow.Tipo || ultimoRow.tipo || "").toLowerCase().trim();
+      let montoUlt = limpiarMonto(ultimoRow.Monto || ultimoRow.monto || "0");
+      let signo = tipoUlt === "ingreso" ? "+" : "-";
+      let colorM = tipoUlt === "ingreso" ? "#00FF88" : "#FF3366";
+
+      document.getElementById('lastMovBalance').innerHTML = `
+        <div><div style="font-size:8.5px; color:var(--text-sub);">ÚLTIMO MOVIMIENTO</div><div style="font-size:11px; font-weight:700;">${txtFecha} - ${txtConc}</div></div>
+        <div style="text-align:right;"><div style="font-size:12px; font-weight:700; color:${colorM};">${signo}$${format(montoUlt)}</div><div style="font-size:8.5px; color:var(--text-sub);">${(ultimoRow.Cuenta || ultimoRow.cuenta || "Efectivo").toUpperCase()}</div></div>
+      `;
+    }
+
+    function renderSemanal() {
+      let ahora = new Date();
+      let añoActual = ahora.getFullYear();
+      let mesActual = ahora.getMonth();
+      let primerDiaMes = new Date(añoActual, mesActual, 1);
+      let ultimoDiaMes = new Date(añoActual, mesActual + 1, 0);
+      let totalDiasMes = ultimoDiaMes.getDate();
+      let nombreMes = primerDiaMes.toLocaleString("es-CO", { month: "long" }).toUpperCase();
+
+      document.getElementById('mesTituloSemanal').innerText = `CONTROL SEMANAL • ${nombreMes}`;
+
+      let semanas = [];
+      let diaInicio = 1;
+      while (diaInicio <= totalDiasMes) {
+        let fechaActualBucle = new Date(añoActual, mesActual, diaInicio);
+        let jsDay = fechaActualBucle.getDay();
+        let diaIso = jsDay === 0 ? 7 : jsDay;
+        let diaFin = Math.min(diaInicio + (7 - diaIso), totalDiasMes);
+        let etiqueta = diaInicio === diaFin ? `${diaInicio}` : `DEL ${diaInicio} AL ${diaFin}`;
+
+        semanas.push({
+          inicio: diaInicio, fin: diaFin, etiqueta: etiqueta.toUpperCase(),
+          diasCount: (diaFin - diaInicio) + 1, gasto: 0, topeBase: 0, topeAjustado: 0
+        });
+        diaInicio = diaFin + 1;
+      }
+
+      let valorDiario = totalDiasMes > 0 ? (presupuestoMensual / totalDiasMes) : 0;
+      let sumaTopes = 0;
+      semanas.forEach((sem, idx) => {
+        if (idx === semanas.length - 1) {
+          sem.topeBase = presupuestoMensual - sumaTopes;
+        } else {
+          sem.topeBase = redondearAlMil(valorDiario * sem.diasCount);
+          sumaTopes += sem.topeBase;
+        }
+      });
+
+      if (Array.isArray(dataDetalle)) {
+        dataDetalle.forEach(row => {
+          let tipo = (row.Tipo || row.tipo || "").toLowerCase().trim();
+          if (tipo !== "gasto") return;
+          let fecha = parseFecha(row.Fecha || row.date || row.dia);
+          if (!fecha || fecha.getMonth() !== mesActual || fecha.getFullYear() !== añoActual) return;
+          let dGasto = fecha.getDate();
+          let monto = limpiarMonto(row.Monto || row.monto || "0");
+          let semTarget = semanas.find(s => dGasto >= s.inicio && dGasto <= s.fin);
+          if (semTarget) semTarget.gasto += monto;
+        });
+      }
+
+      let deficitAcumulado = 0;
+      semanas.forEach(sem => {
+        sem.topeAjustado = Math.max(0, sem.topeBase - deficitAcumulado);
+        let restante = sem.topeAjustado - sem.gasto;
+        deficitAcumulado = restante < 0 ? Math.abs(restante) : 0;
+      });
+
+      let semContainer = document.getElementById('semanasContainer');
+      semContainer.innerHTML = "";
+      semanas.forEach(sem => {
+        let restante = sem.topeAjustado - sem.gasto;
+        let restanteVisual = restante >= 0 ? restante : 0;
+        let sePaso = restante < 0;
+        let estadoTxt = !sePaso ? `Quedan: $${format(restanteVisual)}` : `Te pasaste por: $${format(Math.abs(restante))}`;
+        let pct = sem.topeAjustado > 0 ? Math.min((sem.gasto / sem.topeAjustado) * 100, 100) : 100;
+        let colorBar = sePaso || pct >= 100 ? "#FF3366" : (pct >= 85 ? "#FFCC00" : "#00FF88");
+
+        semContainer.innerHTML += `
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:12px; font-weight:700;">${sem.etiqueta}</span>
+              <span style="font-size:11px; font-weight:700; color:${!sePaso ? '#00FF88' : '#FF3366'};">${estadoTxt}</span>
+            </div>
+            <div style="font-size:11px; color:var(--text-sub);">Límite: $${format(sem.topeAjustado)} | Gastado: $${format(sem.gasto)}</div>
+            <div class="progress-bg">
+              <div class="progress-fill" style="width: ${pct}%; background: ${colorBar};"></div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function renderCalendario() {
+      let ahora = new Date();
+      let añoActual = ahora.getFullYear();
+      let mesActual = ahora.getMonth();
+      let primerDiaMes = new Date(añoActual, mesActual, 1);
+      let ultimoDiaMes = new Date(añoActual, mesActual + 1, 0);
+      let totalDiasMes = ultimoDiaMes.getDate();
+      let nombreMes = primerDiaMes.toLocaleString("es-CO", { month: "long" }).toUpperCase();
+
+      document.getElementById('mesTituloCalendario').innerText = `CALENDARIO • ${nombreMes}`;
+
+      let gastosPorDia = {};
+      for (let d = 1; d <= totalDiasMes; d++) gastosPorDia[d] = 0;
+
+      if (Array.isArray(dataDetalle)) {
+        dataDetalle.forEach(row => {
+          let tipo = (row.Tipo || row.tipo || "").toLowerCase().trim();
+          if (tipo !== "gasto") return;
+          let fecha = parseFecha(row.Fecha || row.date || row.dia);
+          if (!fecha || fecha.getMonth() !== mesActual || fecha.getFullYear() !== añoActual) return;
+          let diaGasto = fecha.getDate();
+          gastosPorDia[diaGasto] = (gastosPorDia[diaGasto] || 0) + limpiarMonto(row.Monto || row.monto || "0");
+        });
+      }
+
+      let diaSemanaInicio = primerDiaMes.getDay();
+      let offsetInicio = diaSemanaInicio === 0 ? 6 : diaSemanaInicio - 1;
+      let calGrid = document.getElementById('calendarGrid');
+      
+      let html = `
+        <div class="cal-day-header">L</div><div class="cal-day-header">M</div><div class="cal-day-header">M</div>
+        <div class="cal-day-header">J</div><div class="cal-day-header">V</div><div class="cal-day-header">S</div><div class="cal-day-header">D</div>
+      `;
+
+      for (let i = 0; i < offsetInicio; i++) {
+        html += `<div class="cal-cell empty"></div>`;
+      }
+
+      for (let dia = 1; dia <= totalDiasMes; dia++) {
+        let gastoDia = gastosPorDia[dia] || 0;
+        let esHoy = (dia === ahora.getDate() && mesActual === ahora.getMonth());
+        let clase = gastoDia > 0 ? "cal-cell has-expense" : "cal-cell";
+        if (esHoy) clase += " today";
+
+        html += `
+          <div class="${clase}">
+            <span class="cal-day-num" style="color:${esHoy ? '#00FF88' : '#FFF'}">${dia}</span>
+            <span class="cal-day-amount">${formatK(gastoDia)}</span>
+          </div>
+        `;
+      }
+      calGrid.innerHTML = html;
+    }
+
+    function renderNubank() {
+      let gastoTotal = 0;
+      let gastosPorTipo = {};
+      Object.keys(SUBLIMITES_CONFIG).forEach(t => gastosPorTipo[t] = 0);
+
+      if (Array.isArray(dataNubank)) {
+        dataNubank.forEach(row => {
+          let monto = limpiarMonto(row.Monto ?? row.monto ?? row.MONTO ?? 0);
+          gastoTotal += monto;
+
+          let tipoRaw = row.Tipo ?? row.tipo ?? row.TIPO ?? "";
+          let tipoNorm = normalizarTexto(tipoRaw);
+
+          Object.keys(SUBLIMITES_CONFIG).forEach(cfg => {
+            if (normalizarTexto(cfg) === tipoNorm) {
+              gastosPorTipo[cfg] += monto;
+            }
+          });
+        });
+      }
+
+      let disponible = LIMITE_TOTAL_NUBANK - gastoTotal;
+      let dispEl = document.getElementById('nubankDisponible');
+      dispEl.innerText = `$${format(disponible)}`;
+      dispEl.style.color = disponible >= 0 ? "#00FF88" : "#FF3366";
+      document.getElementById('nubankUsado').innerText = `USADO: $${format(gastoTotal)}`;
+
+      let subContainer = document.getElementById('sublimitesContainer');
+      subContainer.innerHTML = "";
+      Object.keys(SUBLIMITES_CONFIG).forEach(nombre => {
+        let limite = SUBLIMITES_CONFIG[nombre];
+        let gastado = gastosPorTipo[nombre] || 0;
+        let falta = limite - gastado;
+        let pct = limite > 0 ? (gastado / limite) * 100 : 0;
+        let colorBar = pct >= 100 ? "#FF3366" : "#00FF88";
+
+        subContainer.innerHTML += `
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:10.5px; font-weight:700;">${nombre.toUpperCase()}</div>
+                <div style="font-size:9px; color:var(--text-sub);">Límite: $${format(limite)} | Gastado: $${format(gastado)}</div>
+              </div>
+              <div style="font-size:9.5px; font-weight:700; color:${falta >= 0 ? '#00FF88' : '#FF3366'}; text-align:right;">
+                ${falta >= 0 ? `Quedan: $${format(falta)}` : `Excedido: $${format(Math.abs(falta))}`}
+              </div>
+            </div>
+            <div class="progress-bg">
+              <div class="progress-fill" style="width: ${Math.min(pct, 100)}%; background: ${colorBar};"></div>
+            </div>
+          </div>
+        `;
+      });
+
+      let ultimoRow = dataNubank.length > 0 ? dataNubank[dataNubank.length - 1] : {};
+      let com = ultimoRow.Comercio ?? ultimoRow.comercio ?? ultimoRow.COMERCIO ?? "";
+      let con = ultimoRow.Concepto ?? ultimoRow.concepto ?? ultimoRow.Descripcion ?? "";
+      let m = limpiarMonto(ultimoRow.Monto ?? ultimoRow.monto ?? 0);
+      let textoUltMov = (com && con) ? `${com} - ${con}` : (com || con || "Sin registros");
+
+      document.getElementById('lastMovNubank').innerHTML = `
+        <div><div style="font-size:7.5px; color:var(--text-sub);">ÚLTIMO MOVIMIENTO</div><div style="font-size:10px; font-weight:700;">${textoUltMov}</div></div>
+        <div style="text-align:right;"><div style="font-size:10.5px; font-weight:700; color:#FF3366;">-$${format(m)}</div><div style="font-size:7.5px; color:var(--text-sub);">${(ultimoRow.Cuenta ?? ultimoRow.cuenta ?? "").toUpperCase()}</div></div>
+      `;
+    }
+
+    cargarDatos();
+  </script>
+</body>
+</html>
