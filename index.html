@@ -85,7 +85,6 @@
       border-radius: 14px;
       padding: 4px;
       gap: 4px;
-      overflow-x: auto;
     }
 
     .tab-btn {
@@ -93,13 +92,12 @@
       background: transparent;
       border: none;
       color: var(--text-sub);
-      padding: 9px 6px;
-      font-size: 10.5px;
+      padding: 9px 4px;
+      font-size: 11px;
       font-weight: 700;
       border-radius: 10px;
       cursor: pointer;
       white-space: nowrap;
-      text-align: center;
     }
 
     .tab-btn.active {
@@ -221,15 +219,15 @@
 
     .progress-bg {
       width: 100%;
-      height: 6px;
+      height: 4px;
       background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
+      border-radius: 2px;
       overflow: hidden;
-      margin-top: 6px;
+      margin-top: 4px;
     }
     .progress-fill {
       height: 100%;
-      border-radius: 3px;
+      border-radius: 2px;
       transition: width 0.4s ease;
     }
 
@@ -241,47 +239,6 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-
-    /* Gráficos de Barras CSS */
-    .chart-container {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 4px;
-    }
-    .bar-chart-row {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-    .bar-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      font-weight: 700;
-    }
-    .bar-track {
-      width: 100%;
-      height: 10px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 5px;
-      overflow: hidden;
-    }
-    .bar-fill {
-      height: 100%;
-      border-radius: 5px;
-      transition: width 0.5s ease;
-    }
-
-    .line-chart-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
     }
 
     .calendar-grid {
@@ -359,10 +316,9 @@
       <button class="refresh-btn" onclick="cargarDatos()">Actualizar 🔄</button>
     </div>
 
-    <!-- Barra de Pestañas -->
+    <!-- Barra de Pestañas (4 pestañas originales) -->
     <div class="nav-tabs">
-      <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Inicio</button>
-      <button class="tab-btn" onclick="switchTab('balance')">Balance</button>
+      <button class="tab-btn active" onclick="switchTab('balance')">Balance</button>
       <button class="tab-btn" onclick="switchTab('semanal')">Semanal</button>
       <button class="tab-btn" onclick="switchTab('calendario')">Calendario</button>
       <button class="tab-btn" onclick="switchTab('nubank')">Nubank</button>
@@ -370,45 +326,8 @@
 
     <div id="loadingView" class="loading">Cargando datos directos de Google Sheets...</div>
 
-    <!-- PESTAÑA 0: DASHBOARD / GRÁFICOS -->
-    <div id="dashboardView" class="view-section active">
-      <div class="section-block">
-        <div class="section-title">RESUMEN GRÁFICO</div>
-        
-        <!-- Gráfico 1: Balance Total por Cuentas -->
-        <div class="card">
-          <div style="font-size:11px; font-weight:800; color:var(--text-sub); margin-bottom:4px;">📊 BALANCE TOTAL Y CUENTAS</div>
-          <div class="chart-container" id="chartBalanceContainer"></div>
-        </div>
-
-        <!-- Gráfico 2: Gasto Semanal -->
-        <div class="card">
-          <div style="font-size:11px; font-weight:800; color:var(--text-sub); margin-bottom:4px;">📊 GASTO SEMANAL VS LÍMITE</div>
-          <div class="chart-container" id="chartSemanalContainer"></div>
-        </div>
-
-        <!-- Gráfico 3: Línea de Gasto Diario -->
-        <div class="line-chart-box">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size:11px; font-weight:800; color:var(--text-sub);">📈 TENDENCIA DE GASTO DIARIO</div>
-            <div style="font-size:10px; color:var(--accent-blue);" id="totalMesGrafico">$0 gastados</div>
-          </div>
-          <div style="position:relative; height:110px; width:100%; margin-top:6px;">
-            <svg id="lineChartSvg" width="100%" height="100%" viewBox="0 0 300 100" preserveAspectRatio="none" style="overflow:visible;">
-            </svg>
-          </div>
-          <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-sub); margin-top:4px;">
-            <span>Día 1</span>
-            <span>Mitad de mes</span>
-            <span>Fin de mes</span>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
     <!-- PESTAÑA 1: BALANCE -->
-    <div id="balanceView" class="view-section">
+    <div id="balanceView" class="view-section active">
       <div class="section-block">
         <div class="section-title">BALANCE GENERAL</div>
         <div class="total-card">
@@ -472,6 +391,7 @@
     let dataDetalle = [];
     let dataNubank = [];
     
+    // PRESUPUESTO MENSUAL CONTROLADO DESDE EL CÓDIGO
     const PRESUPUESTO_MENSUAL = 542769;
 
     const SUBLIMITES_CONFIG = {
@@ -488,20 +408,17 @@
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
       
-      if (tab === 'dashboard') {
+      if (tab === 'balance') {
         document.querySelectorAll('.tab-btn')[0].classList.add('active');
-        document.getElementById('dashboardView').classList.add('active');
-      } else if (tab === 'balance') {
-        document.querySelectorAll('.tab-btn')[1].classList.add('active');
         document.getElementById('balanceView').classList.add('active');
       } else if (tab === 'semanal') {
-        document.querySelectorAll('.tab-btn')[2].classList.add('active');
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
         document.getElementById('semanalView').classList.add('active');
       } else if (tab === 'calendario') {
-        document.querySelectorAll('.tab-btn')[3].classList.add('active');
+        document.querySelectorAll('.tab-btn')[2].classList.add('active');
         document.getElementById('calendarioView').classList.add('active');
       } else if (tab === 'nubank') {
-        document.querySelectorAll('.tab-btn')[4].classList.add('active');
+        document.querySelectorAll('.tab-btn')[3].classList.add('active');
         document.getElementById('nubankView').classList.add('active');
       }
     }
@@ -597,7 +514,6 @@
       renderSemanal();
       renderCalendario();
       renderNubank();
-      renderDashboardGraficos();
     }
 
     function renderBalance() {
@@ -851,132 +767,16 @@
           </div>
         `;
       });
-    }
 
-    function renderDashboardGraficos() {
-      let cuentasRaw = { "Bancolombia": 0, "Nequi": 0, "Efectivo": 0 };
-      if (Array.isArray(dataDetalle)) {
-        dataDetalle.forEach(row => {
-          let tipo = (row.Tipo || row.tipo || row.TIPO || "").toLowerCase().trim();
-          let monto = limpiarMonto(row.Monto || row.monto || row.MONTO || "0");
-          let cuenta = row.Cuenta || row.cuenta || row.CUENTA || "Efectivo";
-          if (!cuentasRaw.hasOwnProperty(cuenta)) cuentasRaw[cuenta] = 0;
-          if (tipo === "ingreso") cuentasRaw[cuenta] += monto;
-          if (tipo === "gasto" || tipo === "ahorro") cuentasRaw[cuenta] -= monto;
-        });
-      }
+      let ultimoRow = dataNubank.length > 0 ? dataNubank[dataNubank.length - 1] : {};
+      let com = ultimoRow.Comercio ?? ultimoRow.comercio ?? ultimoRow.COMERCIO ?? "";
+      let con = ultimoRow.Concepto ?? ultimoRow.concepto ?? ultimoRow.Descripcion ?? "";
+      let m = limpiarMonto(ultimoRow.Monto ?? ultimoRow.monto ?? 0);
+      let textoUltMov = (com && con) ? `${com} - ${con}` : (com || con || "Sin registros");
 
-      let maxCuentaVal = Math.max(...Object.values(cuentasRaw), 1);
-      let chartBalEl = document.getElementById('chartBalanceContainer');
-      chartBalEl.innerHTML = "";
-
-      let coloresCuentas = { "Bancolombia": "#FDDA24", "Nequi": "#E00075", "Efectivo": "#00C853" };
-      Object.keys(cuentasRaw).forEach(cta => {
-        let val = cuentasRaw[cta];
-        let pct = Math.min(Math.max((val / maxCuentaVal) * 100, 2), 100);
-        chartBalEl.innerHTML += `
-          <div class="bar-chart-row">
-            <div class="bar-info"><span>${cta.toUpperCase()}</span><span style="color:${coloresCuentas[cta] || '#FFF'}">$${format(val)}</span></div>
-            <div class="bar-track"><div class="bar-fill" style="width: ${pct}%; background: ${coloresCuentas[cta] || '#3A86FF'};"></div></div>
-          </div>
-        `;
-      });
-
-      let ahora = new Date();
-      let añoActual = ahora.getFullYear();
-      let mesActual = ahora.getMonth();
-      let ultimoDiaMes = new Date(añoActual, mesActual + 1, 0).getDate();
-
-      let semanas = [];
-      let diaInicio = 1;
-      while (diaInicio <= ultimoDiaMes) {
-        let fechaBucle = new Date(añoActual, mesActual, diaInicio);
-        let jsDay = fechaBucle.getDay();
-        let diaIso = jsDay === 0 ? 7 : jsDay;
-        let diaFin = Math.min(diaInicio + (7 - diaIso), ultimoDiaMes);
-        semanas.push({ inicio: diaInicio, fin: diaFin, etiqueta: `Semana ${semanas.length + 1}`, gasto: 0, tope: 0 });
-        diaInicio = diaFin + 1;
-      }
-
-      let valorDiario = PRESUPUESTO_MENSUAL / ultimoDiaMes;
-      let sumaTopes = 0;
-      semanas.forEach((sem, idx) => {
-        let diasCount = (sem.fin - sem.inicio) + 1;
-        if (idx === semanas.length - 1) sem.tope = PRESUPUESTO_MENSUAL - sumaTopes;
-        else {
-          sem.tope = redondearAlMil(valorDiario * diasCount);
-          sumaTopes += sem.tope;
-        }
-      });
-
-      if (Array.isArray(dataDetalle)) {
-        dataDetalle.forEach(row => {
-          let tipo = (row.Tipo || row.tipo || "").toLowerCase().trim();
-          if (tipo !== "gasto") return;
-          let fecha = parseFecha(row.Fecha || row.date || row.dia);
-          if (!fecha || fecha.getMonth() !== mesActual || fecha.getFullYear() !== añoActual) return;
-          let dGasto = fecha.getDate();
-          let monto = limpiarMonto(row.Monto || row.monto || "0");
-          let semTarget = semanas.find(s => dGasto >= s.inicio && dGasto <= s.fin);
-          if (semTarget) semTarget.gasto += monto;
-        });
-      }
-
-      let chartSemEl = document.getElementById('chartSemanalContainer');
-      chartSemEl.innerHTML = "";
-      semanas.forEach(sem => {
-        let maxRef = Math.max(sem.tope, sem.gasto, 1);
-        let pctGasto = Math.min((sem.gasto / maxRef) * 100, 100);
-        let colorBar = sem.gasto > sem.tope ? "#FF3366" : "#00FF88";
-        chartSemEl.innerHTML += `
-          <div class="bar-chart-row">
-            <div class="bar-info"><span>${sem.etiqueta} (${sem.inicio}-${sem.fin})</span><span style="color:${colorBar}">$${format(sem.gasto)} / $${format(sem.tope)}</span></div>
-            <div class="bar-track"><div class="bar-fill" style="width: ${pctGasto}%; background: ${colorBar};"></div></div>
-          </div>
-        `;
-      });
-
-      let gastosDiarios = {};
-      for(let d=1; d<=ultimoDiaMes; d++) gastosDiarios[d] = 0;
-      let totalGastoMes = 0;
-
-      if (Array.isArray(dataDetalle)) {
-        dataDetalle.forEach(row => {
-          let tipo = (row.Tipo || row.tipo || "").toLowerCase().trim();
-          if (tipo !== "gasto") return;
-          let fecha = parseFecha(row.Fecha || row.date || row.dia);
-          if (!fecha || fecha.getMonth() !== mesActual || fecha.getFullYear() !== añoActual) return;
-          let dGasto = fecha.getDate();
-          let m = limpiarMonto(row.Monto || row.monto || "0");
-          gastosDiarios[dGasto] += m;
-          totalGastoMes += m;
-        });
-      }
-
-      document.getElementById('totalMesGrafico').innerText = `$${format(totalGastoMes)} gastados`;
-
-      let svgEl = document.getElementById('lineChartSvg');
-      let maxGastoDia = Math.max(...Object.values(gastosDiarios), 10000);
-      let points = [];
-      let stepX = 300 / (ultimoDiaMes - 1 || 1);
-
-      for(let d=1; d<=ultimoDiaMes; d++) {
-        let val = gastosDiarios[d];
-        let x = (d - 1) * stepX;
-        let y = 90 - (val / maxGastoDia) * 80;
-        points.push(`${x},${y}`);
-      }
-
-      let polylinePoints = points.join(" ");
-      svgEl.innerHTML = `
-        <defs>
-          <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#3A86FF" stop-opacity="0.4"/>
-            <stop offset="100%" stop-color="#3A86FF" stop-opacity="0.0"/>
-          </linearGradient>
-        </defs>
-        <polyline fill="none" stroke="#3A86FF" stroke-width="2.5" points="${polylinePoints}" />
-        <polygon fill="url(#lineGrad)" points="0,100 ${polylinePoints} 300,100" />
+      document.getElementById('lastMovNubank').innerHTML = `
+        <div><div style="font-size:7.5px; color:var(--text-sub);">ÚLTIMO MOVIMIENTO</div><div style="font-size:10px; font-weight:700;">${textoUltMov}</div></div>
+        <div style="text-align:right;"><div style="font-size:10.5px; font-weight:700; color:#FF3366;">-$${format(m)}</div><div style="font-size:7.5px; color:var(--text-sub);">${(ultimoRow.Cuenta ?? ultimoRow.cuenta ?? "").toUpperCase()}</div></div>
       `;
     }
 
