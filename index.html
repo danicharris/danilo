@@ -264,6 +264,21 @@
       letter-spacing: 0.5px;
     }
 
+    .excedido-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 9.5px;
+      font-weight: 800;
+      color: var(--accent-red);
+      background: rgba(255, 51, 102, 0.12);
+      border: 1px solid rgba(255, 51, 102, 0.35);
+      padding: 2px 6px;
+      border-radius: 5px;
+      margin-top: 3px;
+      letter-spacing: 0.5px;
+    }
+
     .last-mov {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border-color);
@@ -679,20 +694,17 @@
       semContainer.innerHTML = "";
       semanas.forEach(sem => {
         let restante = sem.topeAjustado - sem.gasto;
-        let sePaso = restante < 0; 
         
         let estadoHtml = "";
         let barraHtml = "";
 
-        if (restante <= 0 && !sePaso) {
+        if (sem.gasto > sem.topeAjustado) {
+          let exceso = sem.gasto - sem.topeAjustado;
+          estadoHtml = `<span style="font-size:11px; font-weight:700; color:#FF3366;">Te pasaste por: $${format(exceso)}</span>`;
+          barraHtml = `<div class="excedido-badge">⚠️ EXCEDIDO EN $${format(exceso)}</div>`;
+        } else if (restante === 0) {
           estadoHtml = `<span style="font-size:11px; font-weight:700; color:var(--accent-green);">Pagado</span>`;
-          barraHtml = `<div class="pagado-badge">✨ COMPLETADO / PAGADO</div>`;
-        } else if (sePaso) {
-          estadoHtml = `<span style="font-size:11px; font-weight:700; color:#FF3366;">Te pasaste por: $${format(Math.abs(restante))}</span>`;
-          barraHtml = `
-            <div class="progress-bg">
-              <div class="progress-fill" style="width: 100%; background: #FF3366;"></div>
-            </div>`;
+          barraHtml = `<div class="pagado-badge">✨ COMPLETADO</div>`;
         } else {
           estadoHtml = `<span style="font-size:11px; font-weight:700; color:#FFCC00;">Quedan: $${format(restante)}</span>`;
           let pctGasto = sem.topeAjustado > 0 ? (sem.gasto / sem.topeAjustado) * 100 : 0;
@@ -809,22 +821,20 @@
         let limite = SUBLIMITES_CONFIG[nombre];
         let gastado = gastosPorTipo[nombre] || 0;
         let falta = limite - gastado;
-        let pct = limite > 0 ? (gastado / limite) * 100 : 0;
         
         let estadoTxt = "";
         let barraHtml = "";
 
-        if (falta <= 0) {
+        if (gastado > limite) {
+          let exceso = gastado - limite;
+          estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:#FF3366;">Te pasaste por: $${format(exceso)}</span>`;
+          barraHtml = `<div class="excedido-badge">⚠️ EXCEDIDO EN $${format(exceso)}</div>`;
+        } else if (falta === 0) {
           estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:var(--accent-green);">Pagado</span>`;
           barraHtml = `<div class="pagado-badge">✨ COMPLETADO</div>`;
-        } else if (pct > 100) {
-          estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:#FF3366;">Excedido: $${format(Math.abs(falta))}</span>`;
-          barraHtml = `
-            <div class="progress-bg">
-              <div class="progress-fill" style="width: 100%; background: #FF3366;"></div>
-            </div>`;
         } else {
           estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:#FFCC00;">Quedan: $${format(falta)}</span>`;
+          let pct = limite > 0 ? (gastado / limite) * 100 : 0;
           let colorBar = pct > 70 ? "#FFCC00" : "#00FF88";
           barraHtml = `
             <div class="progress-bg">
@@ -852,7 +862,7 @@
       let com = ultimoRow.Comercio ?? ultimoRow.comercio ?? ultimoRow.COMERCIO ?? "";
       let con = ultimoRow.Concepto ?? ultimoRow.concepto ?? ultimoRow.Descripcion ?? "";
       let m = limpiarMonto(ultimoRow.Monto ?? ultimoRow.monto ?? 0);
-      let textoUltMov = (com && con) ? `${com} - ${con}` : (com || com || "Sin registros");
+      let textoUltMov = (com && con) ? `${com} - ${con}` : (com || con || "Sin registros");
 
       document.getElementById('lastMovNubank').innerHTML = `
         <div><div style="font-size:7.5px; color:var(--text-sub);">ÚLTIMO MOVIMIENTO</div><div style="font-size:10px; font-weight:700;">${textoUltMov}</div></div>
