@@ -483,7 +483,7 @@
     }
 
     function parseCSVLine(text) {
-      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
+      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^'\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
       let a = [];
       text.replace(re_value, function(m0, m1, m2, m3) {
         if (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"));
@@ -700,11 +700,11 @@
 
         if (sem.gasto > sem.topeAjustado) {
           let exceso = sem.gasto - sem.topeAjustado;
-          estadoHtml = `<span style="font-size:11px; font-weight:700; color:#FF3366;">Te pasaste por: $${format(exceso)}</span>`;
+          estadoHtml = "";
           barraHtml = `<div class="excedido-badge">⚠️ EXCEDIDO EN $${format(exceso)}</div>`;
         } else if (restante === 0) {
           estadoHtml = `<span style="font-size:11px; font-weight:700; color:var(--accent-green);">Pagado</span>`;
-          barraHtml = `<div class="pagado-badge">✨ COMPLETADO</div>`;
+          barraHtml = `<div class="pagado-badge">✨ COMPLETADO / PAGADO</div>`;
         } else {
           estadoHtml = `<span style="font-size:11px; font-weight:700; color:#FFCC00;">Quedan: $${format(restante)}</span>`;
           let pctGasto = sem.topeAjustado > 0 ? (sem.gasto / sem.topeAjustado) * 100 : 0;
@@ -827,11 +827,11 @@
 
         if (gastado > limite) {
           let exceso = gastado - limite;
-          estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:#FF3366;">Te pasaste por: $${format(exceso)}</span>`;
+          estadoTxt = "";
           barraHtml = `<div class="excedido-badge">⚠️ EXCEDIDO EN $${format(exceso)}</div>`;
         } else if (falta === 0) {
           estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:var(--accent-green);">Pagado</span>`;
-          barraHtml = `<div class="pagado-badge">✨ COMPLETADO</div>`;
+          barraHtml = `<div class="pagado-badge">✨ COMPLETADO / PAGADO</div>`;
         } else {
           estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:#FFCC00;">Quedan: $${format(falta)}</span>`;
           let pct = limite > 0 ? (gastado / limite) * 100 : 0;
