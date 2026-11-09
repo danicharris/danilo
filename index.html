@@ -627,28 +627,24 @@
         });
       }
 
-      // Absfunción inversa: recorrer las semanas de atrás hacia adelante para descontar excesos de la última semana primero
-      let deficitPendiente = 0;
-      for (let i = semanas.length - 1; i >= 0; i--) {
-        let sem = semanas[i];
-        // Lo que le sobró o faltó puramente en su semana base (positivo si guardó, negativo si se pasó)
-        let balanceSemana = sem.topeBase - sem.gasto;
+      // Asignar topes base a todas las semanas primero
+      semanas.forEach(sem => {
+        sem.topeAjustado = sem.topeBase;
+      });
 
-        if (balanceSemana < 0) {
-          // Si esta semana se pasó, acumulamos ese déficit para restarlo de las semanas anteriores (del final hacia el principio)
-          deficitPendiente += Math.abs(balanceSemana);
-          sem.topeAjustado = 0; // Se queda sin presupuesto disponible
-        } else {
-          // Si a esta semana le sobró dinero, primero absorbe el déficit pendiente de las semanas posteriores
-          let neto = balanceSemana - deficitPendiente;
-          if (neto >= 0) {
-            sem.topeAjustado = sem.topeBase - deficitPendiente; // Se le descuenta el déficit de atrás
-            deficitPendiente = 0; // Ya se cubrió todo el desfase
-          } else {
-            deficitPendiente = Math.abs(neto); // El sobrante no alcanzó a cubrir todo el déficit acumulado
-            sem.topeAjustado = sem.gasto; // Todo su tope base se consumió absorbiendo el desfase
-          }
+      // Calcular si hubo exceso en las semanas anteriores a la última y acumularlo para restarlo en la última semana
+      let excesoTotal = 0;
+      for (let i = 0; i < semanas.length - 1; i++) {
+        let diff = semanas[i].gasto - semanas[i].topeAjustado;
+        if (diff > 0) {
+          excesoTotal += diff;
         }
+      }
+
+      // Descontar el exceso acumulado únicamente de la última semana del mes
+      if (semanas.length > 0) {
+        let ultimaSemana = semanas[semanas.length - 1];
+        ultimaSemana.topeAjustado = Math.max(0, ultimaSemana.topeBase - excesoTotal);
       }
 
       let semContainer = document.getElementById('semanasContainer');
