@@ -427,7 +427,7 @@
       "Moto": 120000,
       "Claro": 79798,
       "Levotiroxina": 43000,
-      "Adicional": 1191200
+      "Adicional": 1197402
     };
     const LIMITE_TOTAL_NUBANK = 2800000;
 
@@ -816,7 +816,7 @@
 
         if (falta <= 0) {
           estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:var(--accent-green);">Pagado</span>`;
-          barraHtml = `<div class="pagado-badge">✨ PAGADO / COMPLETADO</div>`;
+          barraHtml = `<div class="pagado-badge">✨ COMPLETADO</div>`;
         } else if (pct > 100) {
           estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:#FF3366;">Excedido: $${format(Math.abs(falta))}</span>`;
           barraHtml = `
