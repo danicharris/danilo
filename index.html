@@ -703,7 +703,7 @@
           estadoHtml = "";
           barraHtml = `<div class="excedido-badge">⚠️ EXCEDIDO EN $${format(exceso)}</div>`;
         } else if (restante === 0) {
-          estadoHtml = `<span style="font-size:11px; font-weight:700; color:var(--accent-green);">Pagado</span>`;
+          estadoHtml = "";
           barraHtml = `<div class="pagado-badge">✨ COMPLETADO</div>`;
         } else {
           estadoHtml = `<span style="font-size:11px; font-weight:700; color:#FFCC00;">Quedan: $${format(restante)}</span>`;
@@ -830,7 +830,7 @@
           estadoTxt = "";
           barraHtml = `<div class="excedido-badge">⚠️ EXCEDIDO EN $${format(exceso)}</div>`;
         } else if (falta === 0) {
-          estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:var(--accent-green);">Pagado</span>`;
+          estadoTxt = "";
           barraHtml = `<div class="pagado-badge">✨ COMPLETADO</div>`;
         } else {
           estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:#FFCC00;">Quedan: $${format(falta)}</span>`;
