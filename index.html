@@ -145,6 +145,26 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      position: relative;
+    }
+
+    /* Estilo destacado para la semana actual */
+    .card.current-week {
+      border: 1.5px solid var(--accent-blue);
+      background: rgba(58, 134, 255, 0.06);
+      box-shadow: 0 0 15px rgba(58, 134, 255, 0.15);
+    }
+
+    .current-badge {
+      font-size: 9px;
+      background: rgba(58, 134, 255, 0.2);
+      color: #61A0FF;
+      border: 1px solid rgba(58, 134, 255, 0.4);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin-left: 6px;
     }
 
     .total-card {
@@ -441,7 +461,7 @@
     }
 
     function parseCSVLine(text) {
-      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
+      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^'\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
       let a = [];
       text.replace(re_value, function(m0, m1, m2, m3) {
         if (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"));
@@ -580,6 +600,7 @@
       let ahora = new Date();
       let añoActual = ahora.getFullYear();
       let mesActual = ahora.getMonth();
+      let diaHoy = ahora.getDate();
       let primerDiaMes = new Date(añoActual, mesActual, 1);
       let ultimoDiaMes = new Date(añoActual, mesActual + 1, 0);
       let totalDiasMes = ultimoDiaMes.getDate();
@@ -630,8 +651,7 @@
       // 1. Asignar tope base inicial a todas
       semanas.forEach(sem => { sem.topeAjustado = sem.topeBase; });
 
-      // 2. Calcular cuánto se pasó en las semanas anteriores a la actual en curso (o en general en las pasadas)
-      // Recorremos de atrás hacia adelante (desde la penúltima hacia el inicio) para ir absorbiendo el exceso en cascada inversa
+      // 2. Calcular exceso anterior a la semana actual y aplicarlo en cascada inversa
       let excesoPendiente = 0;
       for (let i = 0; i < semanas.length - 1; i++) {
         let diff = semanas[i].gasto - semanas[i].topeAjustado;
@@ -640,8 +660,6 @@
         }
       }
 
-      // 3. Descontar el exceso acumulado empezando estrictamente por la ÚLTIMA semana del mes, 
-      // y si esta llega a 0, continuar restando hacia la penúltima, antepenúltima, etc.
       for (let i = semanas.length - 1; i >= 0 && excesoPendiente > 0; i--) {
         let sem = semanas[i];
         let disponibleEnSemana = sem.topeAjustado;
@@ -676,10 +694,18 @@
           colorTexto = "#FFCC00";
         }
 
+        // Detectar la semana actual
+        let esSemanaActual = (diaHoy >= sem.inicio && diaHoy <= sem.fin);
+        let claseCard = esSemanaActual ? "card current-week" : "card";
+        let htmlBadgeActual = esSemanaActual ? `<span class="current-badge">ESTA SEMANA</span>` : "";
+
         semContainer.innerHTML += `
-          <div class="card">
+          <div class="${claseCard}">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:12px; font-weight:700;">${sem.etiqueta}</span>
+              <div>
+                <span style="font-size:12px; font-weight:700;">${sem.etiqueta}</span>
+                ${htmlBadgeActual}
+              </div>
               <span style="font-size:11px; font-weight:700; color:${colorTexto};">${estadoTxt}</span>
             </div>
             <div style="font-size:11px; color:var(--text-sub);">Límite: $${format(sem.topeAjustado)} | Gastado: $${format(sem.gasto)}</div>
