@@ -17,8 +17,8 @@
       --text-main: #FFFFFF;
       --text-sub: #8E9DAE;
       --accent-green: #00FF88;
-      --accent-red: #FF3366;
       --accent-yellow: #FFCC00;
+      --accent-red: #FF3366;
       --accent-blue: #3A86FF;
     }
 
@@ -391,7 +391,7 @@
     let dataDetalle = [];
     let dataNubank = [];
     
-    const PRESUPUESTO_MENSUAL = 442769;
+    const PRESUPUESTO_MENSUAL = 542769;
 
     const SUBLIMITES_CONFIG = {
       "Mercado": 1200000,
@@ -598,7 +598,7 @@
 
         semanas.push({
           inicio: diaInicio, fin: diaFin, etiqueta: etiqueta.toUpperCase(),
-          diasCount: (diaFin - diaInicio) + 1, gasto: 0, topeBase: 0, topeAjustado: 0
+          diasCount: (diaFin - diaInicio) + 1, gasto: 0, tope: 0
         });
         diaInicio = diaFin + 1;
       }
@@ -607,10 +607,10 @@
       let sumaTopes = 0;
       semanas.forEach((sem, idx) => {
         if (idx === semanas.length - 1) {
-          sem.topeBase = PRESUPUESTO_MENSUAL - sumaTopes;
+          sem.tope = PRESUPUESTO_MENSUAL - sumaTopes;
         } else {
-          sem.topeBase = redondearAlMil(valorDiario * sem.diasCount);
-          sumaTopes += sem.topeBase;
+          sem.tope = redondearAlMil(valorDiario * sem.diasCount);
+          sumaTopes += sem.tope;
         }
       });
 
@@ -627,25 +627,27 @@
         });
       }
 
-      let deficitAcumulado = 0;
-      semanas.forEach(sem => {
-        sem.topeAjustado = Math.max(0, sem.topeBase - deficitAcumulado);
-        let restante = sem.topeAjustado - sem.gasto;
-        deficitAcumulado = restante < 0 ? Math.abs(restante) : 0;
-      });
-
       let semContainer = document.getElementById('semanasContainer');
       semContainer.innerHTML = "";
       semanas.forEach(sem => {
-        let restante = sem.topeAjustado - sem.gasto;
-        let restanteVisual = restante >= 0 ? restante : 0;
-        let sePaso = restante < 0; // Solo es true si es estrictamente menor a 0 (negativo)
-        let estadoTxt = !sePaso ? `Quedan: $${format(restanteVisual)}` : `Te pasaste por: $${format(Math.abs(restante))}`;
-        let pct = sem.topeAjustado > 0 ? Math.min((sem.gasto / sem.topeAjustado) * 100, 100) : 100;
+        let restante = sem.tope - sem.gasto;
+        let sePaso = restante < 0; 
+        let estadoTxt = !sePaso ? `Quedan: $${format(restante)}` : `Te pasaste por: $${format(Math.abs(restante))}`;
         
-        // Color verde si queda algo o es exactamente 0; rojo solo si se pasa (negativo)
-        let colorBar = sePaso ? "#FF3366" : (pct >= 85 ? "#FFCC00" : "#00FF88");
-        let colorTexto = sePaso ? "#FF3366" : "#00FF88";
+        let pctGasto = sem.tope > 0 ? (sem.gasto / sem.tope) * 100 : 0;
+        let pctBarra = Math.min(pctGasto, 100);
+
+        // Regla de colores: <=70% verde, 71%-100% amarillo, >100% rojo
+        let colorBar = "#00FF88";
+        let colorTexto = "#00FF88";
+
+        if (sePaso || pctGasto > 100) {
+          colorBar = "#FF3366";
+          colorTexto = "#FF3366";
+        } else if (pctGasto > 70) {
+          colorBar = "#FFCC00";
+          colorTexto = "#FFCC00";
+        }
 
         semContainer.innerHTML += `
           <div class="card">
@@ -653,9 +655,9 @@
               <span style="font-size:12px; font-weight:700;">${sem.etiqueta}</span>
               <span style="font-size:11px; font-weight:700; color:${colorTexto};">${estadoTxt}</span>
             </div>
-            <div style="font-size:11px; color:var(--text-sub);">Límite: $${format(sem.topeAjustado)} | Gastado: $${format(sem.gasto)}</div>
+            <div style="font-size:11px; color:var(--text-sub);">Límite: $${format(sem.tope)} | Gastado: $${format(sem.gasto)}</div>
             <div class="progress-bg">
-              <div class="progress-fill" style="width: ${pct}%; background: ${colorBar};"></div>
+              <div class="progress-fill" style="width: ${pctBarra}%; background: ${colorBar};"></div>
             </div>
           </div>
         `;
@@ -750,7 +752,17 @@
         let gastado = gastosPorTipo[nombre] || 0;
         let falta = limite - gastado;
         let pct = limite > 0 ? (gastado / limite) * 100 : 0;
-        let colorBar = pct >= 100 ? "#FF3366" : "#00FF88";
+        
+        let colorBar = "#00FF88";
+        let colorTexto = "#00FF88";
+
+        if (pct > 100 || falta < 0) {
+          colorBar = "#FF3366";
+          colorTexto = "#FF3366";
+        } else if (pct > 70) {
+          colorBar = "#FFCC00";
+          colorTexto = "#FFCC00";
+        }
 
         subContainer.innerHTML += `
           <div class="card">
@@ -759,7 +771,7 @@
                 <div style="font-size:10.5px; font-weight:700;">${nombre.toUpperCase()}</div>
                 <div style="font-size:9px; color:var(--text-sub);">Límite: $${format(limite)} | Gastado: $${format(gastado)}</div>
               </div>
-              <div style="font-size:9.5px; font-weight:700; color:${falta >= 0 ? '#00FF88' : '#FF3366'}; text-align:right;">
+              <div style="font-size:9.5px; font-weight:700; color:${colorTexto}; text-align:right;">
                 ${falta >= 0 ? `Quedan: $${format(falta)}` : `Excedido: $${format(Math.abs(falta))}`}
               </div>
             </div>
@@ -774,11 +786,11 @@
       let com = ultimoRow.Comercio ?? ultimoRow.comercio ?? ultimoRow.COMERCIO ?? "";
       let con = ultimoRow.Concepto ?? ultimoRow.concepto ?? ultimoRow.Descripcion ?? "";
       let m = limpiarMonto(ultimoRow.Monto ?? ultimoRow.monto ?? 0);
-      let textoUltMov = (com && con) ? `${com} - ${con}` : (com || con || "Sin registros");
+      let textoUltMov = (com && con) ? `${com} - ${con}` : (com || com || "Sin registros");
 
       document.getElementById('lastMovNubank').innerHTML = `
         <div><div style="font-size:7.5px; color:var(--text-sub);">ÚLTIMO MOVIMIENTO</div><div style="font-size:10px; font-weight:700;">${textoUltMov}</div></div>
-        <div style="text-align:right;"><div style="font-size:10.5px; font-weight:700; color:#FF3366;">-$${format(m)}</div><div style="font-size:7.5px; color:var(--text-sub);">${(ultimoRow.Cuenta ?? ultimoRow.cuenta ?? "").toUpperCase()}</div></div>
+        <div style="text-align:right;"><div style="font-size:10.5px; font-weight:700; color:#FF3366;>-$${format(m)}</div><div style="font-size:7.5px; color:var(--text-sub);">${(ultimoRow.Cuenta ?? ultimoRow.cuenta ?? "").toUpperCase()}</div></div>
       `;
     }
 
