@@ -279,16 +279,6 @@
       letter-spacing: 0.5px;
     }
 
-    .last-mov {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 10px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -382,7 +372,6 @@
           <div class="total-sub" id="balTotalCuentas">0 CUENTAS ACTIVAS</div>
         </div>
         <div id="cuentasContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
-        <div class="last-mov" id="lastMovBalance"></div>
       </div>
     </div>
 
@@ -420,7 +409,6 @@
           <div class="total-sub" id="nubankUsado">USADO: $0</div>
         </div>
         <div id="sublimitesContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
-        <div class="last-mov" id="lastMovNubank"></div>
       </div>
     </div>
 
@@ -601,19 +589,6 @@
           </div>
         `;
       });
-
-      let ultimoRow = dataDetalle.length > 0 ? dataDetalle[dataDetalle.length - 1] : {};
-      let txtFecha = ultimoRow.Fecha || ultimoRow.date || ultimoRow.dia || "";
-      let txtConc = ultimoRow.Concepto || ultimoRow.descripcion || "";
-      let tipoUlt = (ultimoRow.Tipo || ultimoRow.tipo || "").toLowerCase().trim();
-      let montoUlt = limpiarMonto(ultimoRow.Monto || ultimoRow.monto || "0");
-      let signo = tipoUlt === "ingreso" ? "+" : "-";
-      let colorM = tipoUlt === "ingreso" ? "#00FF88" : "#FF3366";
-
-      document.getElementById('lastMovBalance').innerHTML = `
-        <div><div style="font-size:8.5px; color:var(--text-sub);">ÚLTIMO MOVIMIENTO</div><div style="font-size:11px; font-weight:700;">${txtFecha} - ${txtConc}</div></div>
-        <div style="text-align:right;"><div style="font-size:12px; font-weight:700; color:${colorM};">${signo}$${format(montoUlt)}</div><div style="font-size:8.5px; color:var(--text-sub);">${(ultimoRow.Cuenta || ultimoRow.cuenta || "Efectivo").toUpperCase()}</div></div>
-      `;
     }
 
     function renderSemanal() {
@@ -857,17 +832,6 @@
           </div>
         `;
       });
-
-      let ultimoRow = dataNubank.length > 0 ? dataNubank[dataNubank.length - 1] : {};
-      let com = ultimoRow.Comercio ?? ultimoRow.comercio ?? ultimoRow.COMERCIO ?? "";
-      let con = ultimoRow.Concepto ?? ultimoRow.concepto ?? ultimoRow.Descripcion ?? "";
-      let m = limpiarMonto(ultimoRow.Monto ?? ultimoRow.monto ?? 0);
-      let textoUltMov = (com && con) ? `${com} - ${con}` : (com || con || "Sin registros");
-
-      document.getElementById('lastMovNubank').innerHTML = `
-        <div><div style="font-size:7.5px; color:var(--text-sub);">ÚLTIMO MOVIMIENTO</div><div style="font-size:10px; font-weight:700;">${textoUltMov}</div></div>
-        <div style="text-align:right;"><div style="font-size:10.5px; font-weight:700; color:#FF3366;">-$${format(m)}</div><div style="font-size:7.5px; color:var(--text-sub);">${(ultimoRow.Cuenta ?? ultimoRow.cuenta ?? "").toUpperCase()}</div></div>
-      `;
     }
 
     cargarDatos();
