@@ -77,7 +77,6 @@
       cursor: pointer;
     }
 
-    /* Pestañas */
     .nav-tabs {
       display: flex;
       background: rgba(255, 255, 255, 0.06);
@@ -148,7 +147,6 @@
       position: relative;
     }
 
-    /* Estilo destacado para la semana actual */
     .card.current-week {
       border: 1.5px solid var(--accent-blue);
       background: rgba(58, 134, 255, 0.06);
@@ -251,6 +249,21 @@
       transition: width 0.4s ease;
     }
 
+    .pagado-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 9.5px;
+      font-weight: 800;
+      color: var(--accent-green);
+      background: rgba(0, 255, 136, 0.12);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      padding: 2px 6px;
+      border-radius: 5px;
+      margin-top: 3px;
+      letter-spacing: 0.5px;
+    }
+
     .last-mov {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border-color);
@@ -336,7 +349,6 @@
       <button class="refresh-btn" onclick="cargarDatos()">Actualizar 🔄</button>
     </div>
 
-    <!-- Barra de Pestañas -->
     <div class="nav-tabs">
       <button class="tab-btn active" onclick="switchTab('balance')">Balance</button>
       <button class="tab-btn" onclick="switchTab('semanal')">Semanal</button>
@@ -346,7 +358,6 @@
 
     <div id="loadingView" class="loading">Cargando datos directos de Google Sheets...</div>
 
-    <!-- PESTAÑA 1: BALANCE -->
     <div id="balanceView" class="view-section active">
       <div class="section-block">
         <div class="section-title">BALANCE GENERAL</div>
@@ -360,7 +371,6 @@
       </div>
     </div>
 
-    <!-- PESTAÑA 2: CONTROL SEMANAL -->
     <div id="semanalView" class="view-section">
       <div class="section-block">
         <div class="section-title" id="mesTituloSemanal">CONTROL SEMANAL</div>
@@ -374,7 +384,6 @@
       </div>
     </div>
 
-    <!-- PESTAÑA 3: CALENDARIO -->
     <div id="calendarioView" class="view-section">
       <div class="section-block">
         <div class="section-title" id="mesTituloCalendario">CALENDARIO MENSUAL</div>
@@ -387,7 +396,6 @@
       </div>
     </div>
 
-    <!-- PESTAÑA 4: NUBANK -->
     <div id="nubankView" class="view-section">
       <div class="section-block">
         <div class="section-title">TARJETA NUBANK</div>
@@ -446,7 +454,6 @@
       let lines = text.split("\n");
       let result = [];
       let headers = parseCSVLine(lines[0]);
-
       for (let i = 1; i < lines.length; i++) {
         if (!lines[i].trim()) continue;
         let currentline = parseCSVLine(lines[i]);
@@ -461,7 +468,7 @@
     }
 
     function parseCSVLine(text) {
-      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^'\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
+      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
       let a = [];
       text.replace(re_value, function(m0, m1, m2, m3) {
         if (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"));
@@ -648,22 +655,17 @@
         });
       }
 
-      // 1. Asignar tope base inicial a todas
       semanas.forEach(sem => { sem.topeAjustado = sem.topeBase; });
 
-      // 2. Calcular exceso anterior a la semana actual y aplicarlo en cascada inversa
       let excesoPendiente = 0;
       for (let i = 0; i < semanas.length - 1; i++) {
         let diff = semanas[i].gasto - semanas[i].topeAjustado;
-        if (diff > 0) {
-          excesoPendiente += diff;
-        }
+        if (diff > 0) excesoPendiente += diff;
       }
 
       for (let i = semanas.length - 1; i >= 0 && excesoPendiente > 0; i--) {
         let sem = semanas[i];
         let disponibleEnSemana = sem.topeAjustado;
-
         if (disponibleEnSemana >= excesoPendiente) {
           sem.topeAjustado -= excesoPendiente;
           excesoPendiente = 0;
@@ -678,23 +680,29 @@
       semanas.forEach(sem => {
         let restante = sem.topeAjustado - sem.gasto;
         let sePaso = restante < 0; 
-        let estadoTxt = !sePaso ? `Quedan: $${format(restante)}` : `Te pasaste por: $${format(Math.abs(restante))}`;
         
-        let pctGasto = sem.topeAjustado > 0 ? (sem.gasto / sem.topeAjustado) * 100 : (sem.gasto > 0 ? 200 : 0);
-        let pctBarra = Math.min(pctGasto, 100);
+        let estadoHtml = "";
+        let barraHtml = "";
 
-        let colorBar = "#00FF88";
-        let colorTexto = "#00FF88";
-
-        if (sePaso || pctGasto > 100) {
-          colorBar = "#FF3366";
-          colorTexto = "#FF3366";
-        } else if (pctGasto > 70) {
-          colorBar = "#FFCC00";
-          colorTexto = "#FFCC00";
+        if (restante <= 0 && !sePaso) {
+          estadoHtml = `<span style="font-size:11px; font-weight:700; color:var(--accent-green);">Pagado</span>`;
+          barraHtml = `<div class="pagado-badge">✨ COMPLETADO / PAGADO</div>`;
+        } else if (sePaso) {
+          estadoHtml = `<span style="font-size:11px; font-weight:700; color:#FF3366;">Te pasaste por: $${format(Math.abs(restante))}</span>`;
+          barraHtml = `
+            <div class="progress-bg">
+              <div class="progress-fill" style="width: 100%; background: #FF3366;"></div>
+            </div>`;
+        } else {
+          estadoHtml = `<span style="font-size:11px; font-weight:700; color:#FFCC00;">Quedan: $${format(restante)}</span>`;
+          let pctGasto = sem.topeAjustado > 0 ? (sem.gasto / sem.topeAjustado) * 100 : 0;
+          let colorBar = pctGasto > 70 ? "#FFCC00" : "#00FF88";
+          barraHtml = `
+            <div class="progress-bg">
+              <div class="progress-fill" style="width: ${Math.min(pctGasto, 100)}%; background: ${colorBar};"></div>
+            </div>`;
         }
 
-        // Detectar la semana actual
         let esSemanaActual = (diaHoy >= sem.inicio && diaHoy <= sem.fin);
         let claseCard = esSemanaActual ? "card current-week" : "card";
         let htmlBadgeActual = esSemanaActual ? `<span class="current-badge">ESTA SEMANA</span>` : "";
@@ -706,12 +714,10 @@
                 <span style="font-size:12px; font-weight:700;">${sem.etiqueta}</span>
                 ${htmlBadgeActual}
               </div>
-              <span style="font-size:11px; font-weight:700; color:${colorTexto};">${estadoTxt}</span>
+              ${estadoHtml}
             </div>
             <div style="font-size:11px; color:var(--text-sub);">Límite: $${format(sem.topeAjustado)} | Gastado: $${format(sem.gasto)}</div>
-            <div class="progress-bg">
-              <div class="progress-fill" style="width: ${pctBarra}%; background: ${colorBar};"></div>
-            </div>
+            ${barraHtml}
           </div>
         `;
       });
@@ -780,7 +786,6 @@
         dataNubank.forEach(row => {
           let monto = limpiarMonto(row.Monto ?? row.monto ?? row.MONTO ?? 0);
           gastoTotal += monto;
-
           let tipoRaw = row.Tipo ?? row.tipo ?? row.TIPO ?? "";
           let tipoNorm = normalizarTexto(tipoRaw);
 
@@ -806,15 +811,25 @@
         let falta = limite - gastado;
         let pct = limite > 0 ? (gastado / limite) * 100 : 0;
         
-        let colorBar = "#00FF88";
-        let colorTexto = "#00FF88";
+        let estadoTxt = "";
+        let barraHtml = "";
 
-        if (pct > 100 || falta < 0) {
-          colorBar = "#FF3366";
-          colorTexto = "#FF3366";
-        } else if (pct > 70) {
-          colorBar = "#FFCC00";
-          colorTexto = "#FFCC00";
+        if (falta <= 0) {
+          estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:var(--accent-green);">Pagado</span>`;
+          barraHtml = `<div class="pagado-badge">✨ PAGADO / COMPLETADO</div>`;
+        } else if (pct > 100) {
+          estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:#FF3366;">Excedido: $${format(Math.abs(falta))}</span>`;
+          barraHtml = `
+            <div class="progress-bg">
+              <div class="progress-fill" style="width: 100%; background: #FF3366;"></div>
+            </div>`;
+        } else {
+          estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:#FFCC00;">Quedan: $${format(falta)}</span>`;
+          let colorBar = pct > 70 ? "#FFCC00" : "#00FF88";
+          barraHtml = `
+            <div class="progress-bg">
+              <div class="progress-fill" style="width: ${Math.min(pct, 100)}%; background: ${colorBar};"></div>
+            </div>`;
         }
 
         subContainer.innerHTML += `
@@ -824,13 +839,11 @@
                 <div style="font-size:10.5px; font-weight:700;">${nombre.toUpperCase()}</div>
                 <div style="font-size:9px; color:var(--text-sub);">Límite: $${format(limite)} | Gastado: $${format(gastado)}</div>
               </div>
-              <div style="font-size:9.5px; font-weight:700; color:${colorTexto}; text-align:right;">
-                ${falta >= 0 ? `Quedan: $${format(falta)}` : `Excedido: $${format(Math.abs(falta))}`}
+              <div style="text-align:right;">
+                ${estadoTxt}
               </div>
             </div>
-            <div class="progress-bg">
-              <div class="progress-fill" style="width: ${Math.min(pct, 100)}%; background: ${colorBar};"></div>
-            </div>
+            ${barraHtml}
           </div>
         `;
       });
