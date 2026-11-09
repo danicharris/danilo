@@ -316,7 +316,7 @@
       <button class="refresh-btn" onclick="cargarDatos()">Actualizar 🔄</button>
     </div>
 
-    <!-- Barra de Pestañas (4 pestañas originales) -->
+    <!-- Barra de Pestañas -->
     <div class="nav-tabs">
       <button class="tab-btn active" onclick="switchTab('balance')">Balance</button>
       <button class="tab-btn" onclick="switchTab('semanal')">Semanal</button>
@@ -391,8 +391,7 @@
     let dataDetalle = [];
     let dataNubank = [];
     
-    // PRESUPUESTO MENSUAL CONTROLADO DESDE EL CÓDIGO
-    const PRESUPUESTO_MENSUAL = 442769;
+    const PRESUPUESTO_MENSUAL = 542769;
 
     const SUBLIMITES_CONFIG = {
       "Mercado": 1200000,
@@ -640,16 +639,19 @@
       semanas.forEach(sem => {
         let restante = sem.topeAjustado - sem.gasto;
         let restanteVisual = restante >= 0 ? restante : 0;
-        let sePaso = restante < 0;
+        let sePaso = restante < 0; // Solo es true si es estrictamente menor a 0 (negativo)
         let estadoTxt = !sePaso ? `Quedan: $${format(restanteVisual)}` : `Te pasaste por: $${format(Math.abs(restante))}`;
         let pct = sem.topeAjustado > 0 ? Math.min((sem.gasto / sem.topeAjustado) * 100, 100) : 100;
-        let colorBar = sePaso || pct >= 100 ? "#FF3366" : (pct >= 85 ? "#FFCC00" : "#00FF88");
+        
+        // Color verde si queda algo o es exactamente 0; rojo solo si se pasa (negativo)
+        let colorBar = sePaso ? "#FF3366" : (pct >= 85 ? "#FFCC00" : "#00FF88");
+        let colorTexto = sePaso ? "#FF3366" : "#00FF88";
 
         semContainer.innerHTML += `
           <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span style="font-size:12px; font-weight:700;">${sem.etiqueta}</span>
-              <span style="font-size:11px; font-weight:700; color:${!sePaso ? '#00FF88' : '#FF3366'};">${estadoTxt}</span>
+              <span style="font-size:11px; font-weight:700; color:${colorTexto};">${estadoTxt}</span>
             </div>
             <div style="font-size:11px; color:var(--text-sub);">Límite: $${format(sem.topeAjustado)} | Gastado: $${format(sem.gasto)}</div>
             <div class="progress-bg">
