@@ -627,24 +627,32 @@
         });
       }
 
-      // Asignar topes base a todas las semanas primero
-      semanas.forEach(sem => {
-        sem.topeAjustado = sem.topeBase;
-      });
+      // 1. Asignar tope base inicial a todas
+      semanas.forEach(sem => { sem.topeAjustado = sem.topeBase; });
 
-      // Calcular si hubo exceso en las semanas anteriores a la última y acumularlo para restarlo en la última semana
-      let excesoTotal = 0;
+      // 2. Calcular cuánto se pasó en las semanas anteriores a la actual en curso (o en general en las pasadas)
+      // Recorremos de atrás hacia adelante (desde la penúltima hacia el inicio) para ir absorbiendo el exceso en cascada inversa
+      let excesoPendiente = 0;
       for (let i = 0; i < semanas.length - 1; i++) {
         let diff = semanas[i].gasto - semanas[i].topeAjustado;
         if (diff > 0) {
-          excesoTotal += diff;
+          excesoPendiente += diff;
         }
       }
 
-      // Descontar el exceso acumulado únicamente de la última semana del mes
-      if (semanas.length > 0) {
-        let ultimaSemana = semanas[semanas.length - 1];
-        ultimaSemana.topeAjustado = Math.max(0, ultimaSemana.topeBase - excesoTotal);
+      // 3. Descontar el exceso acumulado empezando estrictamente por la ÚLTIMA semana del mes, 
+      // y si esta llega a 0, continuar restando hacia la penúltima, antepenúltima, etc.
+      for (let i = semanas.length - 1; i >= 0 && excesoPendiente > 0; i--) {
+        let sem = semanas[i];
+        let disponibleEnSemana = sem.topeAjustado;
+
+        if (disponibleEnSemana >= excesoPendiente) {
+          sem.topeAjustado -= excesoPendiente;
+          excesoPendiente = 0;
+        } else {
+          excesoPendiente -= disponibleEnSemana;
+          sem.topeAjustado = 0;
+        }
       }
 
       let semContainer = document.getElementById('semanasContainer');
@@ -805,7 +813,7 @@
       let com = ultimoRow.Comercio ?? ultimoRow.comercio ?? ultimoRow.COMERCIO ?? "";
       let con = ultimoRow.Concepto ?? ultimoRow.concepto ?? ultimoRow.Descripcion ?? "";
       let m = limpiarMonto(ultimoRow.Monto ?? ultimoRow.monto ?? 0);
-      let textoUltMov = (com && con) ? `${com} - ${con}` : (com || con || "Sin registros");
+      let textoUltMov = (com && con) ? `${com} - ${con}` : (com || com || "Sin registros");
 
       document.getElementById('lastMovNubank').innerHTML = `
         <div><div style="font-size:7.5px; color:var(--text-sub);">ÚLTIMO MOVIMIENTO</div><div style="font-size:10px; font-weight:700;">${textoUltMov}</div></div>
