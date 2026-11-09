@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Control Financiero - Tabla Editable</title>
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0B1325 0%, #050811 100%);
+      --card-bg: rgba(255, 255, 255, 0.04);
+      --border-color: rgba(255, 255, 255, 0.15);
+      --text-main: #FFFFFF;
+      --text-sub: #8E9DAE;
+      --accent-green: #00FF88;
+      --accent-red: #FF3366;
+      --accent-blue: #3A86FF;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-bottom: 40px;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 14px 18px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: var(--text-main);
+    }
+
+    .reset-btn {
+      background: rgba(255, 51, 102, 0.12);
+      border: 1px solid rgba(255, 51, 102, 0.4);
+      color: var(--accent-red);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .info-tip {
+      font-size: 11px;
+      color: var(--text-sub);
+      text-align: center;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed var(--border-color);
+      padding: 8px 12px;
+      border-radius: 10px;
+    }
+
+    /* Estilos de Tablas Estilo Excel */
+    .table-section {
+      display: flex;
+      flex-direction: column;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.2);
+    }
+
+    .table-header-group {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      padding: 8px;
+      text-transform: uppercase;
+    }
+
+    .table-header-group.ingresos { background: #1B4D3E; color: #00FF88; border-bottom: 1px solid rgba(0,255,136,0.2); }
+    .table-header-group.gastos { background: #5C1D24; color: #FF8899; border-bottom: 1px solid rgba(255,51,102,0.2); }
+    .table-header-group.restante { background: #1A3A5F; color: #3A86FF; border-bottom: 1px solid rgba(58,134,255,0.2); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      text-align: left;
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-sub);
+      font-size: 10.5px;
+      text-transform: uppercase;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    th:first-child, td:first-child {
+      text-align: left;
+      padding-left: 12px;
+    }
+
+    th:nth-child(2), th:nth-child(3), th:nth-child(4),
+    td:nth-child(2), td:nth-child(3), td:nth-child(4) {
+      text-align: right;
+      padding-right: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .editable {
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .editable:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .editable::after {
+      content: " ✏️";
+      font-size: 9px;
+      opacity: 0.4;
+    }
+
+    .total-row {
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* Input emergente al editar */
+    .edit-input {
+      width: 100%;
+      background: #050811;
+      border: 1px solid var(--accent-blue);
+      color: #FFF;
+      padding: 4px 6px;
+      font-size: 12px;
+      border-radius: 6px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-bar">
+      <div class="header-title">📊 FLUJO MENSUAL EDITABLE</div>
+      <button class="reset-btn" onclick="resetDatos()">Restaurar Valores</button>
+    </div>
+
+    <div class="info-tip">
+      💡 <b>Toca cualquier valor numérico</b> en las tablas para editarlo al instante. Los cambios se guardan automáticamente en tu dispositivo.
+    </div>
+
+    <!-- SECCIÓN 1: INGRESOS -->
+    <div class="table-section">
+      <div class="table-header-group ingresos">Ingresos</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th>Noviembre</th>
+            <th>Diciembre</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="tablaIngresos">
+          <!-- Generado por JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECCIÓN 2: GASTOS -->
+    <div class="table-section">
+      <div class="table-header-group gastos">Gastos</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th>Noviembre</th>
+            <th>Diciembre</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="tablaGastos">
+          <!-- Generado por JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECCIÓN 3: RESTANTE -->
+    <div class="table-section">
+      <div class="table-header-group restante">Restante</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th>Noviembre</th>
+            <th>Diciembre</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="tablaRestante">
+          <!-- Generado por JS -->
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    // Datos iniciales por defecto basados en tu ejemplo
+    const datosIniciales = {
+      ingresos: [
+        { concepto: "Nomina Eliana", nov: 2000000, dic: 2900000 },
+        { concepto: "Nomina Danilo", nov: 4086000, dic: 5586000 }
+      ],
+      gastos: [
+        { concepto: "Nubank", nov: 1431039, dic: 1449000 },
+        { concepto: "Cuidado Maddi", nov: 150000, dic: 150000 },
+        { concepto: "Danilo", nov: 906216, dic: 606216 },
+        { concepto: "Eliana", nov: 880000, dic: 580000 },
+        { concepto: "Bancolombia", nov: 2718745, dic: 2593592 }
+      ]
+    };
+
+    // Cargar desde localStorage o usar valores por defecto
+    let datos = JSON.parse(localStorage.getItem("finanzas_editables")) || datosIniciales;
+
+    function format(n) {
+      return "$" + n.toLocaleString("es-CO");
+    }
+
+    function guardarDatos() {
+      localStorage.setItem("finanzas_editables", JSON.stringify(datos));
+      renderTablas();
+    }
+
+    function resetDatos() {
+      if (confirm("¿Deseas restaurar los valores originales?")) {
+        datos = JSON.parse(JSON.stringify(datosIniciales));
+        guardarDatos();
+      }
+    }
+
+    function renderTablas() {
+      // 1. RENDERIZAR INGRESOS
+      let tbodyIng = document.getElementById("tablaIngresos");
+      tbodyIng.innerHTML = "";
+      let totalNovIng = 0, totalDicIng = 0;
+
+      datos.ingresos.forEach((item, idx) => {
+        let totRow = item.nov + item.dic;
+        totalNovIng += item.nov;
+        totalDicIng += item.dic;
+
+        tbodyIng.innerHTML += `
+          <tr>
+            <td>${item.concepto}</td>
+            <td class="editable" onclick="editarCelda('ingresos', ${idx}, 'nov', ${item.nov})">${format(item.nov)}</td>
+            <td class="editable" onclick="editarCelda('ingresos', ${idx}, 'dic', ${item.dic})">${format(item.dic)}</td>
+            <td><b>${format(totRow)}</b></td>
+          </tr>
+        `;
+      });
+
+      // Fila Total Ingresos
+      let granTotalIng = totalNovIng + totalDicIng;
+      tbodyIng.innerHTML += `
+        <tr class="total-row" style="color: #00FF88;">
+          <td>TOTAL</td>
+          <td>${format(totalNovIng)}</td>
+          <td>${format(totalDicIng)}</td>
+          <td>${format(granTotalIng)}</td>
+        </tr>
+      `;
+
+      // 2. RENDERIZAR GASTOS
+      let tbodyGas = document.getElementById("tablaGastos");
+      tbodyGas.innerHTML = "";
+      let totalNovGas = 0, totalDicGas = 0;
+
+      datos.gastos.forEach((item, idx) => {
+        let totRow = item.nov + item.dic;
+        totalNovGas += item.nov;
+        totalDicGas += item.dic;
+
+        tbodyGas.innerHTML += `
+          <tr>
+            <td>${item.concepto}</td>
+            <td class="editable" onclick="editarCelda('gastos', ${idx}, 'nov', ${item.nov})">${format(item.nov)}</td>
+            <td class="editable" onclick="editarCelda('gastos', ${idx}, 'dic', ${item.dic})">${format(item.dic)}</td>
+            <td><b>${format(totRow)}</b></td>
+          </tr>
+        `;
+      });
+
+      // Fila Total Gastos
+      let granTotalGas = totalNovGas + totalDicGas;
+      tbodyGas.innerHTML += `
+        <tr class="total-row" style="color: #FF8899;">
+          <td>TOTAL</td>
+          <td>${format(totalNovGas)}</td>
+          <td>${format(totalDicGas)}</td>
+          <td>${format(granTotalGas)}</td>
+        </tr>
+      `;
+
+      // 3. RENDERIZAR RESTANTE (Ingresos - Gastos)
+      let tbodyRes = document.getElementById("tablaRestante");
+      let restanteNov = totalNovIng - totalNovGas;
+      let restanteDic = totalDicIng - totalDicGas;
+      let granTotalRes = granTotalIng - granTotalGas;
+
+      tbodyRes.innerHTML = `
+        <tr class="total-row" style="color: #3A86FF; font-size: 13px;">
+          <td>TOTAL</td>
+          <td>${format(restanteNov)}</td>
+          <td>${format(restanteDic)}</td>
+          <td>${format(granTotalRes)}</td>
+        </tr>
+      `;
+    }
+
+    function editarCelda(tipo, index, campo, valorActual) {
+      let celdaActual = event.target;
+      celdaActual.innerHTML = `<input type="number" class="edit-input" value="${valorActual}" id="inputTemp" autofocus>`;
+      
+      let input = document.getElementById("inputTemp");
+      input.focus();
+      input.select();
+
+      let guardarCambio = () => {
+        let nuevoValor = parseInt(input.value, 10);
+        if (!isNaN(nuevoValor)) {
+          datos[tipo][index][campo] = nuevoValor;
+          guardarDatos();
+        } else {
+          renderTablas();
+        }
+      };
+
+      input.onblur = guardarCambio;
+      input.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          guardarCambio();
+        }
+      };
+    }
+
+    // Inicializar render
+    renderTablas();
+  </script>
+</body>
+</html>
