@@ -795,7 +795,7 @@
       let añoFiltro = parseInt(document.getElementById("selectAño").value, 10);
 
       // Obtener presupuesto específico del mes/año seleccionado o usar el por defecto
-      let claveKey = `${añoFiltro}-${mesFiltro}`;
+      let claveKey = `${añoFiltro}-${mesFiltro + 1}`;
       let presupuestoMesActivo = PRESUPUESTOS_MENSUALES[claveKey] !== undefined 
         ? PRESUPUESTOS_MENSUALES[claveKey] 
         : PRESUPUESTO_DEFAULT;
