@@ -524,7 +524,7 @@
     const PRESUPUESTOS_MENSUALES = {
       "2026-11": 442769,  // Noviembre 2026
       "2026-12": 800000, // Diciembre 2026
-      "2027-01": 500000  // Enero 2027
+      "2027-1": 500000  // Enero 2027
     };
     const PRESUPUESTO_DEFAULT = 800000;
 
@@ -707,12 +707,21 @@
     }
 
     function renderBalance() {
+      let mesFiltro = parseInt(document.getElementById("selectMes").value, 10);
+      let añoFiltro = parseInt(document.getElementById("selectAño").value, 10);
+
       let cuentasRaw = { "Bancolombia": 0, "Nequi": 0, "Efectivo": 0 };
+      
       if (Array.isArray(dataDetalle)) {
         dataDetalle.forEach(row => {
+          let fecha = parseFecha(row.Fecha || row.date || row.dia);
+          // Filtramos para que solo sume/reste los movimientos del mes y año seleccionados
+          if (!fecha || fecha.getMonth() !== mesFiltro || fecha.getFullYear() !== añoFiltro) return;
+
           let tipo = (row.Tipo || row.tipo || row.TIPO || "").toLowerCase().trim();
           let monto = limpiarMonto(row.Monto || row.monto || row.MONTO || "0");
           let cuenta = row.Cuenta || row.cuenta || row.CUENTA || "Efectivo";
+          
           if (!cuentasRaw.hasOwnProperty(cuenta)) cuentasRaw[cuenta] = 0;
           if (tipo === "ingreso") cuentasRaw[cuenta] += monto;
           if (tipo === "gasto" || tipo === "ahorro") cuentasRaw[cuenta] -= monto;
