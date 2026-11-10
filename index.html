@@ -41,7 +41,7 @@
 
     .container {
       width: 100%;
-      max-width: 420px;
+      max-width: 500px;
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -344,6 +344,67 @@
       color: var(--text-sub);
       font-size: 13px;
     }
+
+    /* Botón y Estilos para Tabla Desplegable */
+    .btn-toggle-tabla {
+      width: 100%;
+      background: rgba(58, 134, 255, 0.12);
+      border: 1px solid rgba(58, 134, 255, 0.4);
+      color: var(--accent-blue);
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: all 0.2s ease;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-toggle-tabla:hover {
+      background: rgba(58, 134, 255, 0.25);
+    }
+
+    .tabla-wrapper {
+      display: none;
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      margin-top: 6px;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+
+    .tabla-detalle {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      text-align: left;
+    }
+
+    .tabla-detalle th {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--accent-blue);
+      padding: 10px;
+      font-weight: 800;
+      position: sticky;
+      top: 0;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    .tabla-detalle td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+
+    .tabla-detalle tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.02);
+    }
   </style>
 </head>
 <body>
@@ -372,6 +433,12 @@
           <div class="total-sub" id="balTotalCuentas">0 CUENTAS ACTIVAS</div>
         </div>
         <div id="cuentasContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+        
+        <!-- Botón y contenedor para la tabla desplegable -->
+        <button class="btn-toggle-tabla" onclick="toggleTablaDetalle()">📊 VER REGISTRO DETALLE</button>
+        <div id="tablaWrapper" class="tabla-wrapper">
+          <table class="tabla-detalle" id="tablaDetalleContent"></table>
+        </div>
       </div>
     </div>
 
@@ -450,6 +517,18 @@
       } else if (tab === 'nubank') {
         document.querySelectorAll('.tab-btn')[3].classList.add('active');
         document.getElementById('nubankView').classList.add('active');
+      }
+    }
+
+    function toggleTablaDetalle() {
+      const wrapper = document.getElementById('tablaWrapper');
+      const btn = document.querySelector('.btn-toggle-tabla');
+      if (wrapper.style.display === 'block') {
+        wrapper.style.display = 'none';
+        btn.innerText = '📊 VER REGISTRO DETALLE';
+      } else {
+        wrapper.style.display = 'block';
+        btn.innerText = '🙈 OCULTAR REGISTRO DETALLE';
       }
     }
 
@@ -540,6 +619,7 @@
 
     function renderTodo() {
       renderBalance();
+      renderTablaDetalle();
       renderSemanal();
       renderCalendario();
       renderNubank();
@@ -589,6 +669,25 @@
           </div>
         `;
       });
+    }
+
+    function renderTablaDetalle() {
+      const tabla = document.getElementById('tablaDetalleContent');
+      if (!Array.isArray(dataDetalle) || dataDetalle.length === 0) {
+        tabla.innerHTML = "<tr><td style='padding:12px; text-align:center;'>No hay registros disponibles.</td></tr>";
+        return;
+      }
+
+      let cols = Object.keys(dataDetalle[0]);
+      let htmlHead = "<thead><tr>" + cols.map(c => `<th>${c.toUpperCase()}</th>`).join('') + "</tr></thead>";
+      
+      let htmlBody = "<tbody>";
+      dataDetalle.forEach(row => {
+        htmlBody += "<tr>" + cols.map(c => `<td>${row[c] || ''}</td>`).join('') + "</tr>";
+      });
+      htmlBody += "</tbody>";
+
+      tabla.innerHTML = htmlHead + htmlBody;
     }
 
     function renderSemanal() {
