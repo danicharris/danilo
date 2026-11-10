@@ -497,7 +497,6 @@
 
     const SUBLIMITES_CONFIG = {
       "Mercado": 1200000,
-      "Gym": 159800,
       "Moto": 120000,
       "Claro": 79798,
       "Levotiroxina": 43000,
@@ -566,7 +565,7 @@
     }
 
     function parseCSVLine(text) {
-      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
+      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^'\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
       let a = [];
       text.replace(re_value, function(m0, m1, m2, m3) {
         if (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"));
