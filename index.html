@@ -345,7 +345,7 @@
       font-size: 13px;
     }
 
-    /* Botón y Estilos para Tabla Desplegable */
+    /* Botón y Estilos para Tablas Desplegables */
     .btn-toggle-tabla {
       width: 100%;
       background: rgba(58, 134, 255, 0.12);
@@ -434,7 +434,6 @@
         </div>
         <div id="cuentasContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
         
-        <!-- Botón y contenedor para la tabla desplegable -->
         <button class="btn-toggle-tabla" onclick="toggleTablaDetalle()">📊 VER REGISTRO DETALLE</button>
         <div id="tablaWrapper" class="tabla-wrapper">
           <table class="tabla-detalle" id="tablaDetalleContent"></table>
@@ -476,6 +475,11 @@
           <div class="total-sub" id="nubankUsado">USADO: $0</div>
         </div>
         <div id="sublimitesContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+        
+        <button class="btn-toggle-tabla" onclick="toggleTablaNubank()">📊 VER REGISTRO NUBANK</button>
+        <div id="tablaNubankWrapper" class="tabla-wrapper">
+          <table class="tabla-detalle" id="tablaNubankContent"></table>
+        </div>
       </div>
     </div>
 
@@ -522,13 +526,25 @@
 
     function toggleTablaDetalle() {
       const wrapper = document.getElementById('tablaWrapper');
-      const btn = document.querySelector('.btn-toggle-tabla');
+      const btn = document.querySelector('#balanceView .btn-toggle-tabla');
       if (wrapper.style.display === 'block') {
         wrapper.style.display = 'none';
         btn.innerText = '📊 VER REGISTRO DETALLE';
       } else {
         wrapper.style.display = 'block';
         btn.innerText = '🙈 OCULTAR REGISTRO DETALLE';
+      }
+    }
+
+    function toggleTablaNubank() {
+      const wrapper = document.getElementById('tablaNubankWrapper');
+      const btn = document.querySelector('#nubankView .btn-toggle-tabla');
+      if (wrapper.style.display === 'block') {
+        wrapper.style.display = 'none';
+        btn.innerText = '📊 VER REGISTRO NUBANK';
+      } else {
+        wrapper.style.display = 'block';
+        btn.innerText = '🙈 OCULTAR REGISTRO NUBANK';
       }
     }
 
@@ -550,7 +566,7 @@
     }
 
     function parseCSVLine(text) {
-      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^'\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
+      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
       let a = [];
       text.replace(re_value, function(m0, m1, m2, m3) {
         if (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"));
@@ -623,6 +639,7 @@
       renderSemanal();
       renderCalendario();
       renderNubank();
+      renderTablaNubank();
     }
 
     function renderBalance() {
@@ -690,6 +707,25 @@
       tabla.innerHTML = htmlHead + htmlBody;
     }
 
+    function renderTablaNubank() {
+      const tabla = document.getElementById('tablaNubankContent');
+      if (!Array.isArray(dataNubank) || dataNubank.length === 0) {
+        tabla.innerHTML = "<tr><td style='padding:12px; text-align:center;'>No hay registros disponibles.</td></tr>";
+        return;
+      }
+
+      let cols = Object.keys(dataNubank[0]);
+      let htmlHead = "<thead><tr>" + cols.map(c => `<th>${c.toUpperCase()}</th>`).join('') + "</tr></thead>";
+      
+      let htmlBody = "<tbody>";
+      dataNubank.forEach(row => {
+        htmlBody += "<tr>" + cols.map(c => `<td>${row[c] || ''}</td>`).join('') + "</tr>";
+      });
+      htmlBody += "</tbody>";
+
+      tabla.innerHTML = htmlHead + htmlBody;
+    }
+
     function renderSemanal() {
       document.getElementById('budgetText').innerText = `$${format(PRESUPUESTO_MENSUAL)}`;
 
@@ -730,6 +766,25 @@
           sumaTopes += sem.topeBase;
         }
       });
+
+      // Sumar ingresos del día 2 en adelante a la última semana
+      let ingresosExtraUltimaSemana = 0;
+      if (Array.isArray(dataDetalle)) {
+        dataDetalle.forEach(row => {
+          let tipo = (row.Tipo || row.tipo || "").toLowerCase().trim();
+          if (tipo !== "ingreso") return;
+          let fecha = parseFecha(row.Fecha || row.date || row.dia);
+          if (!fecha || fecha.getMonth() !== mesActual || fecha.getFullYear() !== añoActual) return;
+          let dIngreso = fecha.getDate();
+          if (dIngreso >= 2) {
+            ingresosExtraUltimaSemana += limpiarMonto(row.Monto || row.monto || "0");
+          }
+        });
+      }
+
+      if (semanas.length > 0) {
+        semanas[semanas.length - 1].topeBase += ingresosExtraUltimaSemana;
+      }
 
       if (Array.isArray(dataDetalle)) {
         dataDetalle.forEach(row => {
