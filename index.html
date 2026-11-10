@@ -66,11 +66,34 @@
       color: var(--text-main);
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-select {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 6px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .filter-select option {
+      background: #0B1325;
+      color: var(--text-main);
+    }
+
     .refresh-btn {
       background: rgba(0, 255, 136, 0.12);
       border: 1px solid rgba(0, 255, 136, 0.4);
       color: var(--accent-green);
-      padding: 7px 14px;
+      padding: 7px 10px;
       border-radius: 10px;
       font-size: 11px;
       font-weight: 700;
@@ -345,7 +368,6 @@
       font-size: 13px;
     }
 
-    /* Botón y Estilos para Tablas Desplegables */
     .btn-toggle-tabla {
       width: 100%;
       background: rgba(58, 134, 255, 0.12);
@@ -412,7 +434,11 @@
   <div class="container">
     <div class="header-bar">
       <div class="header-title">⚡ MIS FINANZAS</div>
-      <button class="refresh-btn" onclick="cargarDatos()">Actualizar 🔄</button>
+      <div class="header-actions">
+        <select id="selectMes" class="filter-select" onchange="renderTodo()"></select>
+        <select id="selectAño" class="filter-select" onchange="renderTodo()"></select>
+        <button class="refresh-btn" onclick="cargarDatos()">🔄</button>
+      </div>
     </div>
 
     <div class="nav-tabs">
@@ -493,7 +519,14 @@
     let dataDetalle = [];
     let dataNubank = [];
     
-    const PRESUPUESTO_MENSUAL = 442769;
+    // Diccionario de presupuestos por Año y Mes ("AÑO-MES": Monto)
+    // Meses van de 0 (Enero) a 11 (Diciembre)
+    const PRESUPUESTOS_MENSUALES = {
+      "2026-9": 442769,  // Octubre 2026
+      "2026-10": 442769, // Noviembre 2026
+      "2026-11": 442769  // Diciembre 2026
+    };
+    const PRESUPUESTO_DEFAULT = 442769;
 
     const SUBLIMITES_CONFIG = {
       "Mercado": 1200000,
@@ -503,6 +536,38 @@
       "Adicional": 1197402
     };
     const LIMITE_TOTAL_NUBANK = 2800000;
+
+    const MESES_NOMBRES = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+
+    function inicializarFiltros() {
+      const hoy = new Date();
+      const mesActual = hoy.getMonth();
+      const añoActual = hoy.getFullYear();
+
+      const selectMes = document.getElementById("selectMes");
+      const selectAño = document.getElementById("selectAño");
+
+      selectMes.innerHTML = "";
+      MESES_NOMBRES.forEach((m, idx) => {
+        let opt = document.createElement("option");
+        opt.value = idx;
+        opt.innerText = m;
+        if (idx === mesActual) opt.selected = true;
+        selectMes.appendChild(opt);
+      });
+
+      selectAño.innerHTML = "";
+      for (let y = añoActual - 2; y <= añoActual + 3; y++) {
+        let opt = document.createElement("option");
+        opt.value = y;
+        opt.innerText = y;
+        if (y === añoActual) opt.selected = true;
+        selectAño.appendChild(opt);
+      }
+    }
 
     function switchTab(tab) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -565,7 +630,7 @@
     }
 
     function parseCSVLine(text) {
-      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^'\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
+      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
       let a = [];
       text.replace(re_value, function(m0, m1, m2, m3) {
         if (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"));
@@ -726,23 +791,32 @@
     }
 
     function renderSemanal() {
-      document.getElementById('budgetText').innerText = `$${format(PRESUPUESTO_MENSUAL)}`;
+      let mesFiltro = parseInt(document.getElementById("selectMes").value, 10);
+      let añoFiltro = parseInt(document.getElementById("selectAño").value, 10);
+
+      // Obtener presupuesto específico del mes/año seleccionado o usar el por defecto
+      let claveKey = `${añoFiltro}-${mesFiltro}`;
+      let presupuestoMesActivo = PRESUPUESTOS_MENSUALES[claveKey] !== undefined 
+        ? PRESUPUESTOS_MENSUALES[claveKey] 
+        : PRESUPUESTO_DEFAULT;
+
+      document.getElementById('budgetText').innerText = `$${format(presupuestoMesActivo)}`;
 
       let ahora = new Date();
-      let añoActual = ahora.getFullYear();
-      let mesActual = ahora.getMonth();
-      let diaHoy = ahora.getDate();
-      let primerDiaMes = new Date(añoActual, mesActual, 1);
-      let ultimoDiaMes = new Date(añoActual, mesActual + 1, 0);
-      let totalDiasMes = ultimoDiaMes.getDate();
-      let nombreMes = primerDiaMes.toLocaleString("es-CO", { month: "long" }).toUpperCase();
+      let esMesActual = (ahora.getMonth() === mesFiltro && ahora.getFullYear() === añoFiltro);
+      let diaHoy = esMesActual ? ahora.getDate() : -1;
 
-      document.getElementById('mesTituloSemanal').innerText = `CONTROL SEMANAL • ${nombreMes}`;
+      let primerDiaMes = new Date(añoFiltro, mesFiltro, 1);
+      let ultimoDiaMes = new Date(añoFiltro, mesFiltro + 1, 0);
+      let totalDiasMes = ultimoDiaMes.getDate();
+      let nombreMes = MESES_NOMBRES[mesFiltro].toUpperCase();
+
+      document.getElementById('mesTituloSemanal').innerText = `CONTROL SEMANAL • ${nombreMes} ${añoFiltro}`;
 
       let semanas = [];
       let diaInicio = 1;
       while (diaInicio <= totalDiasMes) {
-        let fechaActualBucle = new Date(añoActual, mesActual, diaInicio);
+        let fechaActualBucle = new Date(añoFiltro, mesFiltro, diaInicio);
         let jsDay = fechaActualBucle.getDay();
         let diaIso = jsDay === 0 ? 7 : jsDay;
         let diaFin = Math.min(diaInicio + (7 - diaIso), totalDiasMes);
@@ -755,11 +829,11 @@
         diaInicio = diaFin + 1;
       }
 
-      let valorDiario = totalDiasMes > 0 ? (PRESUPUESTO_MENSUAL / totalDiasMes) : 0;
+      let valorDiario = totalDiasMes > 0 ? (presupuestoMesActivo / totalDiasMes) : 0;
       let sumaTopes = 0;
       semanas.forEach((sem, idx) => {
         if (idx === semanas.length - 1) {
-          sem.topeBase = PRESUPUESTO_MENSUAL - sumaTopes;
+          sem.topeBase = presupuestoMesActivo - sumaTopes;
         } else {
           sem.topeBase = redondearAlMil(valorDiario * sem.diasCount);
           sumaTopes += sem.topeBase;
@@ -773,7 +847,7 @@
           let tipo = (row.Tipo || row.tipo || "").toLowerCase().trim();
           if (tipo !== "ingreso") return;
           let fecha = parseFecha(row.Fecha || row.date || row.dia);
-          if (!fecha || fecha.getMonth() !== mesActual || fecha.getFullYear() !== añoActual) return;
+          if (!fecha || fecha.getMonth() !== mesFiltro || fecha.getFullYear() !== añoFiltro) return;
           let dIngreso = fecha.getDate();
           if (dIngreso >= 2) {
             ingresosExtraUltimaSemana += limpiarMonto(row.Monto || row.monto || "0");
@@ -790,7 +864,7 @@
           let tipo = (row.Tipo || row.tipo || "").toLowerCase().trim();
           if (tipo !== "gasto") return;
           let fecha = parseFecha(row.Fecha || row.date || row.dia);
-          if (!fecha || fecha.getMonth() !== mesActual || fecha.getFullYear() !== añoActual) return;
+          if (!fecha || fecha.getMonth() !== mesFiltro || fecha.getFullYear() !== añoFiltro) return;
           let dGasto = fecha.getDate();
           let monto = limpiarMonto(row.Monto || row.monto || "0");
           let semTarget = semanas.find(s => dGasto >= s.inicio && dGasto <= s.fin);
@@ -864,15 +938,18 @@
     }
 
     function renderCalendario() {
-      let ahora = new Date();
-      let añoActual = ahora.getFullYear();
-      let mesActual = ahora.getMonth();
-      let primerDiaMes = new Date(añoActual, mesActual, 1);
-      let ultimoDiaMes = new Date(añoActual, mesActual + 1, 0);
-      let totalDiasMes = ultimoDiaMes.getDate();
-      let nombreMes = primerDiaMes.toLocaleString("es-CO", { month: "long" }).toUpperCase();
+      let mesFiltro = parseInt(document.getElementById("selectMes").value, 10);
+      let añoFiltro = parseInt(document.getElementById("selectAño").value, 10);
 
-      document.getElementById('mesTituloCalendario').innerText = `CALENDARIO • ${nombreMes}`;
+      let ahora = new Date();
+      let esMesActual = (ahora.getMonth() === mesFiltro && ahora.getFullYear() === añoFiltro);
+
+      let primerDiaMes = new Date(añoFiltro, mesFiltro, 1);
+      let ultimoDiaMes = new Date(añoFiltro, mesFiltro + 1, 0);
+      let totalDiasMes = ultimoDiaMes.getDate();
+      let nombreMes = MESES_NOMBRES[mesFiltro].toUpperCase();
+
+      document.getElementById('mesTituloCalendario').innerText = `CALENDARIO • ${nombreMes} ${añoFiltro}`;
 
       let gastosPorDia = {};
       for (let d = 1; d <= totalDiasMes; d++) gastosPorDia[d] = 0;
@@ -882,7 +959,7 @@
           let tipo = (row.Tipo || row.tipo || "").toLowerCase().trim();
           if (tipo !== "gasto") return;
           let fecha = parseFecha(row.Fecha || row.date || row.dia);
-          if (!fecha || fecha.getMonth() !== mesActual || fecha.getFullYear() !== añoActual) return;
+          if (!fecha || fecha.getMonth() !== mesFiltro || fecha.getFullYear() !== añoFiltro) return;
           let diaGasto = fecha.getDate();
           gastosPorDia[diaGasto] = (gastosPorDia[diaGasto] || 0) + limpiarMonto(row.Monto || row.monto || "0");
         });
@@ -903,7 +980,7 @@
 
       for (let dia = 1; dia <= totalDiasMes; dia++) {
         let gastoDia = gastosPorDia[dia] || 0;
-        let esHoy = (dia === ahora.getDate() && mesActual === ahora.getMonth());
+        let esHoy = esMesActual && (dia === ahora.getDate());
         let clase = gastoDia > 0 ? "cal-cell has-expense" : "cal-cell";
         if (esHoy) clase += " today";
 
@@ -918,12 +995,18 @@
     }
 
     function renderNubank() {
+      let mesFiltro = parseInt(document.getElementById("selectMes").value, 10);
+      let añoFiltro = parseInt(document.getElementById("selectAño").value, 10);
+
       let gastoTotal = 0;
       let gastosPorTipo = {};
       Object.keys(SUBLIMITES_CONFIG).forEach(t => gastosPorTipo[t] = 0);
 
       if (Array.isArray(dataNubank)) {
         dataNubank.forEach(row => {
+          let fecha = parseFecha(row.Fecha || row.date || row.dia);
+          if (fecha && (fecha.getMonth() !== mesFiltro || fecha.getFullYear() !== añoFiltro)) return;
+
           let monto = limpiarMonto(row.Monto ?? row.monto ?? row.MONTO ?? 0);
           gastoTotal += monto;
           let tipoRaw = row.Tipo ?? row.tipo ?? row.TIPO ?? "";
@@ -987,6 +1070,8 @@
       });
     }
 
+    // Inicialización
+    inicializarFiltros();
     cargarDatos();
   </script>
 </body>
