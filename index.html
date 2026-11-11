@@ -471,13 +471,6 @@
     let dataDetalle = [];
     let dataNubank = [];
 
-    const SUBLIMITES_CONFIG = {
-      "Mercado": 1000000,
-      "Moto": 120000,
-      "Claro": 79798,
-      "Levotiroxina": 43000,
-      "Adicional": 1197402
-    };
     const LIMITE_TOTAL_NUBANK = 2800000;
 
     const MESES_NOMBRES = [
@@ -570,7 +563,7 @@
     }
 
     function parseCSVLine(text) {
-      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
+      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^'\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
       let a = [];
       text.replace(re_value, function(m0, m1, m2, m3) {
         if (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"));
@@ -795,9 +788,21 @@
       let mesFiltro = parseInt(document.getElementById("selectMes").value, 10);
       let añoFiltro = parseInt(document.getElementById("selectAño").value, 10);
 
+      // Calcular el límite dinámico de "Adicional" restando los demás límites fijos al total de 2,800,000
+      let limitesFijosSinAdicional = 1000000 + 120000 + 79798 + 43000; // Mercado(1M) + Moto(120k) + Claro(79.798) + Levotiroxina(43k)
+      let limiteAdicionalDinamico = LIMITE_TOTAL_NUBANK - limitesFijosSinAdicional;
+
+      const sublimitesConfigDinamico = {
+        "Mercado": 1000000,
+        "Moto": 120000,
+        "Claro": 79798,
+        "Levotiroxina": 43000,
+        "Adicional": limiteAdicionalDinamico
+      };
+
       let gastoTotal = 0;
       let gastosPorTipo = {};
-      Object.keys(SUBLIMITES_CONFIG).forEach(t => gastosPorTipo[t] = 0);
+      Object.keys(sublimitesConfigDinamico).forEach(t => gastosPorTipo[t] = 0);
 
       if (Array.isArray(dataNubank)) {
         dataNubank.forEach(row => {
@@ -809,7 +814,7 @@
           let tipoRaw = row.Tipo ?? row.tipo ?? row.TIPO ?? "";
           let tipoNorm = normalizarTexto(tipoRaw);
 
-          Object.keys(SUBLIMITES_CONFIG).forEach(cfg => {
+          Object.keys(sublimitesConfigDinamico).forEach(cfg => {
             if (normalizarTexto(cfg) === tipoNorm) {
               gastosPorTipo[cfg] += monto;
             }
@@ -825,8 +830,8 @@
 
       let subContainer = document.getElementById('sublimitesContainer');
       subContainer.innerHTML = "";
-      Object.keys(SUBLIMITES_CONFIG).forEach(nombre => {
-        let limite = SUBLIMITES_CONFIG[nombre];
+      Object.keys(sublimitesConfigDinamico).forEach(nombre => {
+        let limite = sublimitesConfigDinamico[nombre];
         let gastado = gastosPorTipo[nombre] || 0;
         let falta = limite - gastado;
         
