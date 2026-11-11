@@ -17,7 +17,6 @@
       --text-main: #FFFFFF;
       --text-sub: #8E9DAE;
       --accent-green: #00FF88;
-      --accent-yellow: #FFCC00;
       --accent-red: #FF3366;
       --accent-blue: #3A86FF;
     }
@@ -473,11 +472,11 @@
     let dataNubank = [];
 
     const SUBLIMITES_CONFIG = {
-      "Mercado": 1200000,
+      "Mercado": 1000000,
       "Moto": 120000,
       "Claro": 79798,
       "Levotiroxina": 43000,
-      "Adicional": 1357202
+      "Adicional": 1197402
     };
     const LIMITE_TOTAL_NUBANK = 2800000;
 
@@ -571,7 +570,7 @@
     }
 
     function parseCSVLine(text) {
-      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^'\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
+      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
       let a = [];
       text.replace(re_value, function(m0, m1, m2, m3) {
         if (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"));
@@ -836,18 +835,25 @@
 
         if (gastado > limite) {
           let exceso = gastado - limite;
-          estadoTxt = "";
-          barraHtml = `<div class="excedido-badge">⚠️ EXCEDIDO EN $${format(exceso)}</div>`;
-        } else if (falta === 0) {
-          estadoTxt = "";
-          barraHtml = `<div class="pagado-badge">✨ COMPLETADO</div>`;
-        } else {
-          estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:#FFCC00;">Quedan: $${format(falta)}</span>`;
-          let pct = limite > 0 ? (gastado / limite) * 100 : 0;
-          let colorBar = pct > 70 ? "#FFCC00" : "#00FF88";
+          estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:var(--accent-red);">Excedido: $${format(exceso)}</span>`;
           barraHtml = `
             <div class="progress-bg">
-              <div class="progress-fill" style="width: ${Math.min(pct, 100)}%; background: ${colorBar};"></div>
+              <div class="progress-fill" style="width: 100%; background: var(--accent-red);"></div>
+            </div>
+            <div class="excedido-badge">⚠️ EXCEDIDO EN $${format(exceso)}</div>`;
+        } else if (falta === 0) {
+          estadoTxt = "";
+          barraHtml = `
+            <div class="progress-bg">
+              <div class="progress-fill" style="width: 100%; background: var(--accent-green);"></div>
+            </div>
+            <div class="pagado-badge">✨ COMPLETADO</div>`;
+        } else {
+          estadoTxt = `<span style="font-size:9.5px; font-weight:700; color:var(--accent-green);">Quedan: $${format(falta)}</span>`;
+          let pct = limite > 0 ? (gastado / limite) * 100 : 0;
+          barraHtml = `
+            <div class="progress-bg">
+              <div class="progress-fill" style="width: ${Math.min(pct, 100)}%; background: var(--accent-green);"></div>
             </div>`;
         }
 
