@@ -19,6 +19,7 @@
       --accent-green: #00FF88;
       --accent-red: #FF3366;
       --accent-blue: #3A86FF;
+      --accent-gold: #FFD700;
     }
 
     * {
@@ -283,6 +284,32 @@
       letter-spacing: 0.5px;
     }
 
+    .calendar-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .stat-title {
+      font-size: 9.5px;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .stat-val {
+      font-size: 15px;
+      font-weight: 800;
+      margin-top: 3px;
+      color: var(--text-main);
+    }
+
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -304,6 +331,7 @@
       flex-direction: column;
       justify-content: space-between;
       padding: 6px;
+      position: relative;
     }
     .cal-cell.empty {
       background: transparent;
@@ -312,6 +340,11 @@
     .cal-cell.has-expense {
       background: rgba(255, 51, 102, 0.22);
       border-color: rgba(255, 51, 102, 0.4);
+    }
+    .cal-cell.max-expense {
+      border: 2px solid var(--accent-gold) !important;
+      background: rgba(255, 215, 0, 0.15) !important;
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
     }
     .cal-cell.today {
       border-color: var(--accent-green);
@@ -325,6 +358,18 @@
       font-weight: 700;
       color: #FF88AA;
       text-align: right;
+    }
+    .max-badge-tag {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      font-size: 8px;
+      background: var(--accent-gold);
+      color: #000;
+      font-weight: 900;
+      padding: 1px 4px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
 
     .loading {
@@ -435,6 +480,18 @@
     <div id="calendarioView" class="view-section">
       <div class="section-block">
         <div class="section-title" id="mesTituloCalendario">CALENDARIO MENSUAL</div>
+        
+        <div class="calendar-stats">
+          <div class="stat-card">
+            <div class="stat-title">Total Gastos Mes</div>
+            <div class="stat-val" id="calTotalGastos" style="color: var(--accent-red);">$0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">Promedio Diario</div>
+            <div class="stat-val" id="calPromedioDiario">$0</div>
+          </div>
+        </div>
+
         <div class="card" style="background:transparent; border:none; padding:0;">
           <div class="calendar-grid" id="calendarGrid">
             <div class="cal-day-header">L</div><div class="cal-day-header">M</div><div class="cal-day-header">M</div>
@@ -563,7 +620,7 @@
     }
 
     function parseCSVLine(text) {
-      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^'\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
+      let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'\s\\]*(?:\s+[^,'\s\\]+)*))\s*(?:,\s*|$)/g;
       let a = [];
       text.replace(re_value, function(m0, m1, m2, m3) {
         if (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"));
@@ -744,6 +801,11 @@
       let gastosPorDia = {};
       for (let d = 1; d <= totalDiasMes; d++) gastosPorDia[d] = 0;
 
+      let sumaTotalGastosMes = 0;
+      let diasConGastoCount = 0;
+      let maxGastoValor = -1;
+      let diaMaxGasto = null;
+
       if (Array.isArray(dataDetalle)) {
         dataDetalle.forEach(row => {
           let tipo = (row.Tipo || row.tipo || "").toLowerCase().trim();
@@ -751,9 +813,28 @@
           let fecha = parseFecha(row.Fecha || row.date || row.dia);
           if (!fecha || fecha.getMonth() !== mesFiltro || fecha.getFullYear() !== añoFiltro) return;
           let diaGasto = fecha.getDate();
-          gastosPorDia[diaGasto] = (gastosPorDia[diaGasto] || 0) + limpiarMonto(row.Monto || row.monto || "0");
+          let monto = limpiarMonto(row.Monto || row.monto || "0");
+          gastosPorDia[diaGasto] = (gastosPorDia[diaGasto] || 0) + monto;
         });
       }
+
+      // Calcular totales, promedios y día máximo
+      for (let d = 1; d <= totalDiasMes; d++) {
+        let g = gastosPorDia[d];
+        if (g > 0) {
+          sumaTotalGastosMes += g;
+          diasConGastoCount++;
+          if (g > maxGastoValor) {
+            maxGastoValor = g;
+            diaMaxGasto = d;
+          }
+        }
+      }
+
+      let promedioDiario = diasConGastoCount > 0 ? Math.round(sumaTotalGastosMes / diasConGastoCount) : 0;
+
+      document.getElementById('calTotalGastos').innerText = `$${format(sumaTotalGastosMes)}`;
+      document.getElementById('calPromedioDiario').innerText = `$${format(promedioDiario)}`;
 
       let diaSemanaInicio = primerDiaMes.getDay();
       let offsetInicio = diaSemanaInicio === 0 ? 6 : diaSemanaInicio - 1;
@@ -771,11 +852,21 @@
       for (let dia = 1; dia <= totalDiasMes; dia++) {
         let gastoDia = gastosPorDia[dia] || 0;
         let esHoy = esMesActual && (dia === ahora.getDate());
-        let clase = gastoDia > 0 ? "cal-cell has-expense" : "cal-cell";
+        let esMaximo = (dia === diaMaxGasto && maxGastoValor > 0);
+
+        let clase = "cal-cell";
+        if (esMaximo) {
+          clase += " max-expense";
+        } else if (gastoDia > 0) {
+          clase += " has-expense";
+        }
         if (esHoy) clase += " today";
+
+        let badgeMaxHtml = esMaximo ? `<div class="max-badge-tag">🔥 MÁS GASTO</div>` : "";
 
         html += `
           <div class="${clase}">
+            ${badgeMaxHtml}
             <span class="cal-day-num" style="color:${esHoy ? '#00FF88' : '#FFF'}">${dia}</span>
             <span class="cal-day-amount">${formatK(gastoDia)}</span>
           </div>
@@ -788,8 +879,7 @@
       let mesFiltro = parseInt(document.getElementById("selectMes").value, 10);
       let añoFiltro = parseInt(document.getElementById("selectAño").value, 10);
 
-      // Calcular el límite dinámico de "Adicional" restando los demás límites fijos al total de 2,800,000
-      let limitesFijosSinAdicional = 1000000 + 120000 + 79798 + 43000; // Mercado(1M) + Moto(120k) + Claro(79.798) + Levotiroxina(43k)
+      let limitesFijosSinAdicional = 1000000 + 120000 + 79798 + 43000;
       let limiteAdicionalDinamico = LIMITE_TOTAL_NUBANK - limitesFijosSinAdicional;
 
       const sublimitesConfigDinamico = {
