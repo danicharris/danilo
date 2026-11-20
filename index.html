@@ -195,6 +195,33 @@
       font-weight: 600;
     }
 
+    .nubank-sub-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .nubank-sub-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .nubank-sub-label {
+      font-size: 9px;
+      color: var(--text-sub);
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+    .nubank-sub-val {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
     .row-item {
       display: flex;
       justify-content: space-between;
@@ -507,7 +534,20 @@
         <div class="total-card">
           <div class="total-title">Disponible Nubank</div>
           <div class="total-amount" id="nubankDisponible">$0</div>
-          <div class="total-sub" id="nubankUsado">USADO: $0</div>
+          <div class="nubank-sub-grid">
+            <div class="nubank-sub-item">
+              <span class="nubank-sub-label">Usado Límites</span>
+              <span class="nubank-sub-val" id="nubankUsadoLimites" style="color: var(--accent-blue);">$0</span>
+            </div>
+            <div class="nubank-sub-item">
+              <span class="nubank-sub-label">Usado Total</span>
+              <span class="nubank-sub-val" id="nubankUsado">$0</span>
+            </div>
+            <div class="nubank-sub-item">
+              <span class="nubank-sub-label">Adicional</span>
+              <span class="nubank-sub-val" id="nubankUsadoAdicional" style="color: var(--accent-green);">$0</span>
+            </div>
+          </div>
         </div>
         <div id="sublimitesContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
         
@@ -818,7 +858,6 @@
         });
       }
 
-      // Calcular totales, promedios y día máximo
       for (let d = 1; d <= totalDiasMes; d++) {
         let g = gastosPorDia[d];
         if (g > 0) {
@@ -879,20 +918,17 @@
       let mesFiltro = parseInt(document.getElementById("selectMes").value, 10);
       let añoFiltro = parseInt(document.getElementById("selectAño").value, 10);
 
-      let limitesFijosSinAdicional = 1000000 + 120000 + 79798 + 43000;
-      let limiteAdicionalDinamico = LIMITE_TOTAL_NUBANK - limitesFijosSinAdicional;
-
-      const sublimitesConfigDinamico = {
+      const sublimitesConfig = {
         "Mercado": 1000000,
         "Moto": 120000,
         "Claro": 80000,
-        "Levotiroxina": 45000,
-        "Adicional": limiteAdicionalDinamico
+        "Levotiroxina": 45000
       };
 
       let gastoTotal = 0;
+      let gastoAdicional = 0;
       let gastosPorTipo = {};
-      Object.keys(sublimitesConfigDinamico).forEach(t => gastosPorTipo[t] = 0);
+      Object.keys(sublimitesConfig).forEach(t => gastosPorTipo[t] = 0);
 
       if (Array.isArray(dataNubank)) {
         dataNubank.forEach(row => {
@@ -904,24 +940,33 @@
           let tipoRaw = row.Tipo ?? row.tipo ?? row.TIPO ?? "";
           let tipoNorm = normalizarTexto(tipoRaw);
 
-          Object.keys(sublimitesConfigDinamico).forEach(cfg => {
-            if (normalizarTexto(cfg) === tipoNorm) {
-              gastosPorTipo[cfg] += monto;
-            }
-          });
+          if (tipoNorm === "adicional") {
+            gastoAdicional += monto;
+          } else {
+            Object.keys(sublimitesConfig).forEach(cfg => {
+              if (normalizarTexto(cfg) === tipoNorm) {
+                gastosPorTipo[cfg] += monto;
+              }
+            });
+          }
         });
       }
 
+      let gastoConLimites = Object.values(gastosPorTipo).reduce((a, b) => a + b, 0);
       let disponible = LIMITE_TOTAL_NUBANK - gastoTotal;
+
       let dispEl = document.getElementById('nubankDisponible');
       dispEl.innerText = `$${format(disponible)}`;
       dispEl.style.color = disponible >= 0 ? "#00FF88" : "#FF3366";
-      document.getElementById('nubankUsado').innerText = `USADO: $${format(gastoTotal)}`;
+
+      document.getElementById('nubankUsadoLimites').innerText = `$${format(gastoConLimites)}`;
+      document.getElementById('nubankUsado').innerText = `$${format(gastoTotal)}`;
+      document.getElementById('nubankUsadoAdicional').innerText = `$${format(gastoAdicional)}`;
 
       let subContainer = document.getElementById('sublimitesContainer');
       subContainer.innerHTML = "";
-      Object.keys(sublimitesConfigDinamico).forEach(nombre => {
-        let limite = sublimitesConfigDinamico[nombre];
+      Object.keys(sublimitesConfig).forEach(nombre => {
+        let limite = sublimitesConfig[nombre];
         let gastado = gastosPorTipo[nombre] || 0;
         let falta = limite - gastado;
         
